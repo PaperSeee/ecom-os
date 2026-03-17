@@ -64,7 +64,7 @@ interface MonteCarloSummary {
 const CashFlowChart = dynamic(() => import("./cash-flow-chart"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/70 text-sm text-zinc-400">
+    <div className="flex h-full items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-sm text-slate-500">
       Chargement du graphique...
     </div>
   ),
@@ -379,27 +379,27 @@ export default function CashFlowPredictorPage() {
   }, [activeSimulation.avgMarginPercent, activeSimulation.breakDay, mcRisk, netMarginPercent, worstBreakDay]);
 
   return (
-    <div className="space-y-6">
-      <header className="rounded-2xl border border-zinc-700 bg-zinc-950 p-5 text-zinc-100">
-        <h1 className="text-3xl font-bold">Cash-flow Predictor</h1>
-        <p className="mt-2 text-sm text-zinc-400">Simulation 30 a 60 jours avec decalage de payout Stripe/Shopify.</p>
+    <div className="space-y-6 animate-fade-in">
+      <header className="fin-card rounded-2xl p-5">
+        <h1 className="text-3xl font-bold text-slate-900">Cash-flow Predictor</h1>
+        <p className="mt-2 text-sm text-slate-600">Simulation 30 a 60 jours avec decalage de payout Stripe/Shopify.</p>
       </header>
 
       <section className="grid gap-4 xl:grid-cols-12">
-        <aside className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100 xl:col-span-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-300">Configuration</h2>
+        <aside className="fin-card space-y-4 rounded-2xl p-4 text-slate-900 xl:col-span-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Configuration</h2>
 
-          <label className="block text-sm text-zinc-300">
+          <label className="block text-sm text-slate-600">
             Capital de depart
             <input
               type="number"
               value={startingCapital}
               onChange={(event) => setStartingCapital(Number(event.target.value))}
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             />
           </label>
 
-          <label className="block text-sm text-zinc-300">
+          <label className="block text-sm text-slate-600">
             Budget Ads Quotidien: {formatCurrency(dailyAdBudget)}
             <input
               type="range"
@@ -412,7 +412,7 @@ export default function CashFlowPredictorPage() {
             />
           </label>
 
-          <label className="block text-sm text-zinc-300">
+          <label className="block text-sm text-slate-600">
             ROAS estime: {roas.toFixed(1)}x
             <input
               type="range"
@@ -425,7 +425,7 @@ export default function CashFlowPredictorPage() {
             />
           </label>
 
-          <label className="block text-sm text-zinc-300">
+          <label className="block text-sm text-slate-600">
             Marge nette estimee (%): {netMarginPercent}%
             <input
               type="range"
@@ -439,7 +439,7 @@ export default function CashFlowPredictorPage() {
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm text-zinc-300">
+            <label className="block text-sm text-slate-600">
               Frais paiement (%): {paymentFeePercent}%
               <input
                 type="range"
@@ -452,7 +452,7 @@ export default function CashFlowPredictorPage() {
               />
             </label>
 
-            <label className="block text-sm text-zinc-300">
+            <label className="block text-sm text-slate-600">
               Remboursements (%): {refundPercent}%
               <input
                 type="range"
@@ -466,7 +466,7 @@ export default function CashFlowPredictorPage() {
             </label>
           </div>
 
-          <label className="block text-sm text-zinc-300">
+          <label className="block text-sm text-slate-600">
             TVA provisionnee (%): {vatPercent}%
             <input
               type="range"
@@ -479,8 +479,8 @@ export default function CashFlowPredictorPage() {
             />
           </label>
 
-          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3">
-            <label className="flex items-center gap-2 text-sm text-zinc-200">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"
                 checked={monteCarloEnabled}
@@ -491,7 +491,7 @@ export default function CashFlowPredictorPage() {
 
             {monteCarloEnabled ? (
               <div className="mt-3 space-y-3">
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-slate-600">
                   Iterations
                   <input
                     type="number"
@@ -500,11 +500,11 @@ export default function CashFlowPredictorPage() {
                     step={100}
                     value={mcIterations}
                     onChange={(event) => setMcIterations(Number(event.target.value))}
-                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
                   />
                 </label>
 
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-slate-600">
                   Volatilite ROAS (%): {mcRoasVolatility}%
                   <input
                     type="range"
@@ -517,7 +517,7 @@ export default function CashFlowPredictorPage() {
                   />
                 </label>
 
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-slate-600">
                   Volatilite COGS (%): {mcCogsVolatility}%
                   <input
                     type="range"
@@ -530,7 +530,7 @@ export default function CashFlowPredictorPage() {
                   />
                 </label>
 
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-slate-600">
                   Volatilite remboursements (%): {mcRefundVolatility}%
                   <input
                     type="range"
@@ -543,7 +543,7 @@ export default function CashFlowPredictorPage() {
                   />
                 </label>
 
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-slate-600">
                   Jitter payout (+/- jours): {mcPayoutJitterDays}
                   <input
                     type="range"
@@ -559,7 +559,7 @@ export default function CashFlowPredictorPage() {
             ) : null}
           </div>
 
-          <label className="block text-sm text-zinc-300">
+          <label className="block text-sm text-slate-600">
             Delai de payout (jours)
             <input
               type="number"
@@ -567,11 +567,11 @@ export default function CashFlowPredictorPage() {
               max={14}
               value={payoutDelayDays}
               onChange={(event) => setPayoutDelayDays(Number(event.target.value))}
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             />
           </label>
 
-          <label className="block text-sm text-zinc-300">
+          <label className="block text-sm text-slate-600">
             Horizon simulation (jours)
             <input
               type="number"
@@ -579,16 +579,16 @@ export default function CashFlowPredictorPage() {
               max={60}
               value={horizonDays}
               onChange={(event) => setHorizonDays(Number(event.target.value))}
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             />
           </label>
 
-          <label className="block text-sm text-zinc-300">
+          <label className="block text-sm text-slate-600">
             Mode COGS
             <select
               value={cogsMode}
               onChange={(event) => setCogsMode(event.target.value as CogsMode)}
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             >
               <option value="percent">% du chiffre d affaires</option>
               <option value="fixed-per-order">Montant fixe par vente</option>
@@ -596,7 +596,7 @@ export default function CashFlowPredictorPage() {
           </label>
 
           {cogsMode === "percent" ? (
-            <label className="block text-sm text-zinc-300">
+            <label className="block text-sm text-slate-600">
               COGS (%): {cogsPercent}%
               <input
                 type="range"
@@ -610,31 +610,31 @@ export default function CashFlowPredictorPage() {
             </label>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm text-zinc-300">
+              <label className="block text-sm text-slate-600">
                 COGS / vente
                 <input
                   type="number"
                   min={0}
                   value={cogsPerOrder}
                   onChange={(event) => setCogsPerOrder(Number(event.target.value))}
-                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2"
+                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
                 />
               </label>
-              <label className="block text-sm text-zinc-300">
+              <label className="block text-sm text-slate-600">
                 AOV moyen
                 <input
                   type="number"
                   min={10}
                   value={avgOrderValue}
                   onChange={(event) => setAvgOrderValue(Number(event.target.value))}
-                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2"
+                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
                 />
               </label>
             </div>
           )}
 
-          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3">
-            <label className="flex items-center gap-2 text-sm text-zinc-200">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"
                 checked={scalingEnabled}
@@ -645,7 +645,7 @@ export default function CashFlowPredictorPage() {
 
             {scalingEnabled ? (
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="text-sm text-zinc-300">
+                <label className="text-sm text-slate-600">
                   +X%
                   <input
                     type="number"
@@ -653,10 +653,10 @@ export default function CashFlowPredictorPage() {
                     max={200}
                     value={scalingIncreasePercent}
                     onChange={(event) => setScalingIncreasePercent(Number(event.target.value))}
-                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
                   />
                 </label>
-                <label className="text-sm text-zinc-300">
+                <label className="text-sm text-slate-600">
                   Tous les Y jours
                   <input
                     type="number"
@@ -664,7 +664,7 @@ export default function CashFlowPredictorPage() {
                     max={30}
                     value={scalingEveryDays}
                     onChange={(event) => setScalingEveryDays(Number(event.target.value))}
-                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
                   />
                 </label>
               </div>
@@ -674,18 +674,18 @@ export default function CashFlowPredictorPage() {
 
         <div className="space-y-4 xl:col-span-8">
           <div className="grid gap-4 md:grid-cols-3">
-            <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
-              <p className="text-xs uppercase tracking-wide text-zinc-400">Solde initial</p>
+            <article className="fin-card rounded-2xl p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Solde initial</p>
               <p className="mt-2 text-2xl font-semibold">{formatCurrency(startingCapital)}</p>
             </article>
-            <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
-              <p className="text-xs uppercase tracking-wide text-zinc-400">Solde min</p>
+            <article className="fin-card rounded-2xl p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Solde min</p>
               <p className={`mt-2 text-2xl font-semibold ${activeSimulation.minBalance < 0 ? "text-red-400" : "text-emerald-400"}`}>
                 {formatCurrency(activeSimulation.minBalance)}
               </p>
             </article>
-            <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
-              <p className="text-xs uppercase tracking-wide text-zinc-400">Solde J+{horizonDays}</p>
+            <article className="fin-card rounded-2xl p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Solde J+{horizonDays}</p>
               <p className={`mt-2 text-2xl font-semibold ${activeSimulation.endBalance < 0 ? "text-red-400" : "text-emerald-400"}`}>
                 {formatCurrency(activeSimulation.endBalance)}
               </p>
@@ -694,19 +694,19 @@ export default function CashFlowPredictorPage() {
 
           {simulation.monteCarlo ? (
             <div className="grid gap-4 md:grid-cols-3">
-              <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
-                <p className="text-xs uppercase tracking-wide text-zinc-400">Risque de rupture (MC)</p>
-                <p className={`mt-2 text-2xl font-semibold ${simulation.monteCarlo.breakProbability >= 30 ? "text-red-400" : "text-emerald-400"}`}>
+              <article className="fin-card rounded-2xl p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Risque de rupture (MC)</p>
+                <p className={`mt-2 text-2xl font-semibold ${simulation.monteCarlo.breakProbability >= 30 ? "text-red-500" : "text-emerald-600"}`}>
                   {simulation.monteCarlo.breakProbability.toFixed(1)}%
                 </p>
               </article>
-              <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
-                <p className="text-xs uppercase tracking-wide text-zinc-400">P50 solde final</p>
-                <p className="mt-2 text-2xl font-semibold text-zinc-100">{formatCurrency(simulation.monteCarlo.p50EndBalance)}</p>
+              <article className="fin-card rounded-2xl p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">P50 solde final</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900">{formatCurrency(simulation.monteCarlo.p50EndBalance)}</p>
               </article>
-              <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
-                <p className="text-xs uppercase tracking-wide text-zinc-400">Median break day</p>
-                <p className="mt-2 text-2xl font-semibold text-zinc-100">
+              <article className="fin-card rounded-2xl p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Median break day</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900">
                   {simulation.monteCarlo.medianBreakDay ? `J+${simulation.monteCarlo.medianBreakDay}` : "Aucune"}
                 </p>
               </article>
@@ -718,7 +718,9 @@ export default function CashFlowPredictorPage() {
               type="button"
               onClick={() => setActiveScenario("pessimistic")}
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                activeScenario === "pessimistic" ? "bg-red-900 text-red-100" : "border border-zinc-700 text-zinc-300"
+                activeScenario === "pessimistic"
+                  ? "border border-amber-200 bg-amber-100 text-amber-800"
+                  : "border border-slate-300 bg-white text-slate-600"
               }`}
             >
               Pessimiste
@@ -727,7 +729,9 @@ export default function CashFlowPredictorPage() {
               type="button"
               onClick={() => setActiveScenario("base")}
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                activeScenario === "base" ? "bg-zinc-100 text-zinc-900" : "border border-zinc-700 text-zinc-300"
+                activeScenario === "base"
+                  ? "border border-slate-900 bg-slate-900 text-white"
+                  : "border border-slate-300 bg-white text-slate-600"
               }`}
             >
               Base
@@ -736,17 +740,19 @@ export default function CashFlowPredictorPage() {
               type="button"
               onClick={() => setActiveScenario("aggressive")}
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                activeScenario === "aggressive" ? "bg-emerald-900 text-emerald-100" : "border border-zinc-700 text-zinc-300"
+                activeScenario === "aggressive"
+                  ? "border border-sky-200 bg-sky-100 text-sky-800"
+                  : "border border-slate-300 bg-white text-slate-600"
               }`}
             >
               Agressif
             </button>
           </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
+          <div className="fin-card rounded-2xl p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-semibold">Evolution du Cash</h2>
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${activeSimulation.breakDay ? "bg-red-950 text-red-300" : "bg-emerald-950 text-emerald-300"}`}>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${activeSimulation.breakDay ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
                 {survivalLabel}
               </span>
             </div>
@@ -756,18 +762,18 @@ export default function CashFlowPredictorPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
+          <div className="fin-card rounded-2xl p-4">
             <h2 className="text-base font-semibold">Recommandation</h2>
-            <p className="mt-2 text-sm text-zinc-300">{recommendation}</p>
+            <p className="mt-2 text-sm text-slate-600">{recommendation}</p>
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
+      <section className="fin-card rounded-2xl p-4">
         <h2 className="text-base font-semibold">Tableau de simulation jour par jour ({activeScenario})</h2>
         <div className="mt-3 overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wide text-zinc-400">
+            <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-3 py-2">Jour</th>
                 <th className="px-3 py-2">Sorties Ads</th>
@@ -780,17 +786,17 @@ export default function CashFlowPredictorPage() {
             </thead>
             <tbody>
               {activeSimulation.rows.map((row) => (
-                <tr key={row.day} className="border-t border-zinc-800">
+                <tr key={row.day} className="border-t border-slate-200">
                   <td className="px-3 py-2">{row.label}</td>
-                  <td className="px-3 py-2 text-red-300">-{formatCurrency(row.adSpend)}</td>
-                  <td className="px-3 py-2 text-red-300">-{formatCurrency(row.cogsOut)}</td>
-                  <td className="px-3 py-2 text-amber-300">-{formatCurrency(row.payoutFeesOut + row.vatOut + row.refundsOut)}</td>
-                  <td className="px-3 py-2 text-emerald-300">+{formatCurrency(row.payoutIn)}</td>
-                  <td className={`px-3 py-2 ${row.netFlow >= 0 ? "text-emerald-300" : "text-red-300"}`}>
+                  <td className="px-3 py-2 text-red-600">-{formatCurrency(row.adSpend)}</td>
+                  <td className="px-3 py-2 text-red-600">-{formatCurrency(row.cogsOut)}</td>
+                  <td className="px-3 py-2 text-amber-600">-{formatCurrency(row.payoutFeesOut + row.vatOut + row.refundsOut)}</td>
+                  <td className="px-3 py-2 text-emerald-600">+{formatCurrency(row.payoutIn)}</td>
+                  <td className={`px-3 py-2 ${row.netFlow >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                     {row.netFlow >= 0 ? "+" : ""}
                     {formatCurrency(row.netFlow)}
                   </td>
-                  <td className={`px-3 py-2 font-semibold ${row.balance >= 0 ? "text-zinc-100" : "text-red-300"}`}>
+                  <td className={`px-3 py-2 font-semibold ${row.balance >= 0 ? "text-slate-800" : "text-red-600"}`}>
                     {formatCurrency(row.balance)}
                   </td>
                 </tr>

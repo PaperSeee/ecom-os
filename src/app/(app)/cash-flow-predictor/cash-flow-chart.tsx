@@ -34,15 +34,16 @@ export default function CashFlowChart({ rows }: CashFlowChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={rows} margin={{ top: 10, right: 12, left: 12, bottom: 0 }}>
-        <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
-        <XAxis dataKey="label" tick={{ fill: "#a1a1aa", fontSize: 12 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: "#a1a1aa", fontSize: 12 }} axisLine={false} tickLine={false} />
+        <CartesianGrid stroke="rgba(15,23,42,0.08)" strokeDasharray="4 4" />
+        <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
         <Tooltip
           contentStyle={{
             borderRadius: "0.75rem",
-            borderColor: "#3f3f46",
-            backgroundColor: "#09090b",
-            color: "#fafafa",
+            borderColor: "#e2e8f0",
+            backgroundColor: "#ffffff",
+            color: "#0f172a",
+            boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
           }}
           formatter={(value) => {
             const numericValue = typeof value === "number" ? value : Number(value ?? 0);
