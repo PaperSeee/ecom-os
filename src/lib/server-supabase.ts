@@ -5,12 +5,12 @@ import { DEFAULT_WORKSPACE_NAME, TEAM_USER_IDS } from "@/lib/team";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SECRET_KEY;
+export const hasSupabaseServerEnv = Boolean(url && serviceKey);
 
-if (!url || !serviceKey) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY in environment");
-}
+const safeUrl = url ?? "https://example.supabase.co";
+const safeServiceKey = serviceKey ?? "missing-service-role-key";
 
-export const supabaseAdmin = createClient(url, serviceKey, {
+export const supabaseAdmin = createClient(safeUrl, safeServiceKey, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
@@ -18,6 +18,10 @@ export const supabaseAdmin = createClient(url, serviceKey, {
 });
 
 export const resolveSharedUserIds = async (): Promise<string[]> => {
+  if (!hasSupabaseServerEnv) {
+    return [...TEAM_USER_IDS];
+  }
+
   const { data, error } = await supabaseAdmin
     .from("workspace_members")
     .select("user_id, workspaces!inner(name)")
@@ -31,6 +35,10 @@ export const resolveSharedUserIds = async (): Promise<string[]> => {
 };
 
 export const resolveSharedWorkspaceId = async (): Promise<string | null> => {
+  if (!hasSupabaseServerEnv) {
+    return null;
+  }
+
   const { data, error } = await supabaseAdmin
     .from("workspaces")
     .select("id")
