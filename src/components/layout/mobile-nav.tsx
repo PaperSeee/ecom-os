@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Boxes, ChartNoAxesCombined, CheckSquare, Flag, Gauge, Radar, Wallet } from "lucide-react";
+import { Boxes, ChartNoAxesCombined, CheckSquare, Flag, Gauge, Radar, TrendingUp, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -12,6 +12,7 @@ const items = [
   { href: "/competitors", icon: Radar, label: "Spy" },
   { href: "/ads-scaling", icon: ChartNoAxesCombined, label: "Ads" },
   { href: "/financial-tracker", icon: Wallet, label: "Cash" },
+  { href: "/cash-flow-predictor", icon: TrendingUp, label: "Predict" },
   { href: "/todo", icon: CheckSquare, label: "Todo" },
 ];
 
@@ -20,7 +21,7 @@ export const MobileNav = () => {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-2 pb-safe pt-2 backdrop-blur-sm lg:hidden">
-      <ul className="grid grid-cols-7 gap-1">
+      <ul className="grid grid-cols-8 gap-1">
         {items.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
