@@ -74,13 +74,23 @@ export async function POST(request: NextRequest) {
   const actorUserId = payload.actorUserId && userIds.includes(payload.actorUserId) ? payload.actorUserId : userIds[0];
 
   if (payload.entity === "campaign") {
+    const normalizedBudget = payload.dailyBudget ?? payload.budget ?? 0;
+
+    if (normalizedBudget <= 0 || !payload.name.trim()) {
+      return NextResponse.json({ error: "Nom campagne et budget journalier > 0 requis" }, { status: 400 });
+    }
+
+    if (!workspaceId) {
+      return NextResponse.json({ error: "Workspace introuvable. Execute team_onboarding.sql puis workspace_audit_migration.sql." }, { status: 400 });
+    }
+
     let { error } = await supabaseAdmin.from("campaigns").insert({
       workspace_id: workspaceId,
       user_id: actorUserId,
       platform: payload.platform,
       name: payload.name,
-      budget: payload.budget,
-      daily_budget: payload.dailyBudget ?? payload.budget,
+      budget: normalizedBudget,
+      daily_budget: normalizedBudget,
       roas: payload.roas,
       status: payload.status,
     });
@@ -92,7 +102,7 @@ export async function POST(request: NextRequest) {
         user_id: actorUserId,
         platform: payload.platform,
         name: payload.name,
-        budget: payload.dailyBudget ?? payload.budget,
+        budget: normalizedBudget,
         roas: payload.roas,
         status: fallbackStatus,
       });
@@ -135,13 +145,14 @@ export async function PATCH(request: NextRequest) {
 
   const userIds = await resolveSharedUserIds();
   const actorUserId = payload.actorUserId && userIds.includes(payload.actorUserId) ? payload.actorUserId : userIds[0];
+  const normalizedBudget = payload.dailyBudget ?? payload.budget;
 
   let { error } = await supabaseAdmin
     .from("campaigns")
     .update({
       user_id: actorUserId,
-      budget: payload.budget,
-      daily_budget: payload.dailyBudget,
+      budget: normalizedBudget,
+      daily_budget: normalizedBudget,
       roas: payload.roas,
       status: payload.status,
       name: payload.name,
@@ -154,7 +165,7 @@ export async function PATCH(request: NextRequest) {
       .from("campaigns")
       .update({
         user_id: actorUserId,
-        budget: payload.dailyBudget ?? payload.budget,
+        budget: normalizedBudget,
         roas: payload.roas,
         status: fallbackStatus,
         name: payload.name,

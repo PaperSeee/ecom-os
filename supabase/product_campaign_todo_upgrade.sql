@@ -57,3 +57,34 @@ drop trigger if exists trg_todo_items_updated_at on public.todo_items;
 create trigger trg_todo_items_updated_at
 before update on public.todo_items
 for each row execute function public.set_updated_meta();
+
+create table if not exists public.campaign_daily_stats (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references public.workspaces(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  campaign_id uuid not null references public.campaigns(id) on delete cascade,
+  stat_date date not null,
+  roas numeric(10,2) not null default 0,
+  cpm numeric(10,2) not null default 0,
+  spend numeric(12,2) not null default 0,
+  budget_reached boolean not null default false,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_campaign_daily_stats_workspace_id on public.campaign_daily_stats(workspace_id);
+create index if not exists idx_campaign_daily_stats_campaign_id on public.campaign_daily_stats(campaign_id);
+
+alter table public.campaign_daily_stats enable row level security;
+
+drop policy if exists campaign_daily_stats_workspace_all on public.campaign_daily_stats;
+create policy campaign_daily_stats_workspace_all on public.campaign_daily_stats
+for all
+using (public.is_workspace_member(workspace_id))
+with check (public.is_workspace_member(workspace_id));
+
+drop trigger if exists trg_campaign_daily_stats_updated_at on public.campaign_daily_stats;
+create trigger trg_campaign_daily_stats_updated_at
+before update on public.campaign_daily_stats
+for each row execute function public.set_updated_meta();

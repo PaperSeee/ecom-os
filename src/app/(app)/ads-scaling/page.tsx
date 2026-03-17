@@ -22,6 +22,18 @@ interface ScalingLog {
   created_at: string;
 }
 
+interface DailyStat {
+  id: string;
+  campaign_id: string;
+  stat_date: string;
+  roas: number;
+  cpm: number;
+  spend: number;
+  budget_reached: boolean;
+  notes: string;
+  created_at: string;
+}
+
 export default function AdsScalingPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [logs, setLogs] = useState<ScalingLog[]>([]);
@@ -39,6 +51,16 @@ export default function AdsScalingPage() {
     note: "",
     author: "Ilias",
   });
+  const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
+  const [dailyForm, setDailyForm] = useState({
+    campaignId: "",
+    statDate: new Date().toISOString().slice(0, 10),
+    roas: 0,
+    cpm: 0,
+    spend: 0,
+    budgetReached: false,
+    notes: "",
+  });
 
   const loadAds = async () => {
     try {
@@ -54,18 +76,39 @@ export default function AdsScalingPage() {
     }
   };
 
+  const loadDailyStats = async () => {
+    try {
+      const response = await fetch("/api/ads/daily", { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const payload = (await response.json()) as { stats: DailyStat[] };
+      setDailyStats(payload.stats);
+    } catch {
+      // Keep current state when network requests are interrupted.
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadAds();
+    void loadDailyStats();
   }, []);
 
   const createCampaign = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await fetch("/api/ads", {
+    const response = await fetch("/api/ads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entity: "campaign", actorUserId, ...campaignForm }),
+      body: JSON.stringify({ entity: "campaign", actorUserId, budget: campaignForm.dailyBudget, ...campaignForm }),
     });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({ error: "Erreur inconnue" }))) as { error?: string };
+      alert(payload.error ?? "Impossible de creer la campagne");
+      return;
+    }
+
     setCampaignForm({ platform: "Meta", name: "", dailyBudget: 0, roas: 0, status: "testing" });
     await loadAds();
   };
@@ -89,13 +132,56 @@ export default function AdsScalingPage() {
     if (!logForm.campaignId) {
       return;
     }
-    await fetch("/api/ads", {
+    const response = await fetch("/api/ads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ entity: "log", actorUserId, ...logForm }),
     });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({ error: "Erreur inconnue" }))) as { error?: string };
+      alert(payload.error ?? "Impossible de creer le log");
+      return;
+    }
+
     setLogForm({ campaignId: "", decision: "Test New Angle", note: "", author: logForm.author });
     await loadAds();
+  };
+
+  const createDailyStat = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!dailyForm.campaignId) {
+      return;
+    }
+
+    const response = await fetch("/api/ads/daily", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        actorUserId,
+        campaignId: dailyForm.campaignId,
+        statDate: dailyForm.statDate,
+        roas: dailyForm.roas,
+        cpm: dailyForm.cpm,
+        spend: dailyForm.spend,
+        budgetReached: dailyForm.budgetReached,
+        notes: dailyForm.notes,
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({ error: "Erreur inconnue" }))) as { error?: string };
+      alert(payload.error ?? "Impossible d'ajouter le suivi journalier");
+      return;
+    }
+
+    setDailyForm((prev) => ({ ...prev, roas: 0, cpm: 0, spend: 0, notes: "" }));
+    await loadDailyStats();
+  };
+
+  const deleteDailyStat = async (id: string) => {
+    await fetch(`/api/ads/daily?id=${id}`, { method: "DELETE" });
+    await loadDailyStats();
   };
 
   const deleteLog = async (id: string) => {
@@ -130,8 +216,14 @@ export default function AdsScalingPage() {
               <option value="scaling">scaling</option>
             </select>
             <input value={campaignForm.name} onChange={(event) => setCampaignForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Campaign name" className="fin-input sm:col-span-2" />
-            <input type="number" step="0.01" value={campaignForm.dailyBudget} onChange={(event) => setCampaignForm((prev) => ({ ...prev, dailyBudget: Number(event.target.value) }))} placeholder="Daily budget" className="fin-input" />
-            <input type="number" step="0.01" value={campaignForm.roas} onChange={(event) => setCampaignForm((prev) => ({ ...prev, roas: Number(event.target.value) }))} placeholder="ROAS" className="fin-input" />
+            <label className="text-xs text-slate-500">
+              Budget journalier
+              <input type="number" step="0.01" value={campaignForm.dailyBudget} onChange={(event) => setCampaignForm((prev) => ({ ...prev, dailyBudget: Number(event.target.value) }))} placeholder="0" className="fin-input mt-1" />
+            </label>
+            <label className="text-xs text-slate-500">
+              ROAS actuel
+              <input type="number" step="0.01" value={campaignForm.roas} onChange={(event) => setCampaignForm((prev) => ({ ...prev, roas: Number(event.target.value) }))} placeholder="0" className="fin-input mt-1" />
+            </label>
             <button className="fin-btn-primary px-4 py-2 text-sm sm:col-span-2 interactive-pulse">Add Campaign</button>
           </div>
         </form>
@@ -192,6 +284,58 @@ export default function AdsScalingPage() {
             </button>
           </article>
         ))}
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        <form onSubmit={createDailyStat} className="fin-panel p-5">
+          <h2 className="text-base font-semibold text-slate-900">Daily Performance Update</h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <select value={dailyForm.campaignId} onChange={(event) => setDailyForm((prev) => ({ ...prev, campaignId: event.target.value }))} className="fin-input sm:col-span-2">
+              <option value="">Select campaign</option>
+              {campaigns.map((campaign) => (
+                <option key={campaign.id} value={campaign.id}>{campaign.name}</option>
+              ))}
+            </select>
+            <label className="text-xs text-slate-500">
+              Date de suivi
+              <input type="date" className="fin-input mt-1" value={dailyForm.statDate} onChange={(event) => setDailyForm((prev) => ({ ...prev, statDate: event.target.value }))} />
+            </label>
+            <label className="text-xs text-slate-500">
+              ROAS
+              <input type="number" step="0.01" className="fin-input mt-1" value={dailyForm.roas} onChange={(event) => setDailyForm((prev) => ({ ...prev, roas: Number(event.target.value) }))} />
+            </label>
+            <label className="text-xs text-slate-500">
+              CPM
+              <input type="number" step="0.01" className="fin-input mt-1" value={dailyForm.cpm} onChange={(event) => setDailyForm((prev) => ({ ...prev, cpm: Number(event.target.value) }))} />
+            </label>
+            <label className="text-xs text-slate-500">
+              Spend du jour
+              <input type="number" step="0.01" className="fin-input mt-1" value={dailyForm.spend} onChange={(event) => setDailyForm((prev) => ({ ...prev, spend: Number(event.target.value) }))} />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700 sm:col-span-2">
+              <input type="checkbox" checked={dailyForm.budgetReached} onChange={(event) => setDailyForm((prev) => ({ ...prev, budgetReached: event.target.checked }))} />
+              Budget journalier atteint
+            </label>
+            <textarea className="fin-input min-h-[90px] sm:col-span-2" placeholder="Notes quotidiennes..." value={dailyForm.notes} onChange={(event) => setDailyForm((prev) => ({ ...prev, notes: event.target.value }))} />
+            <button className="fin-btn-primary px-4 py-2 text-sm sm:col-span-2">Save Daily Update</button>
+          </div>
+        </form>
+
+        <div className="fin-panel p-5">
+          <h2 className="text-base font-semibold text-slate-900">Daily Stats History</h2>
+          <div className="mt-3 space-y-2">
+            {dailyStats.length === 0 ? <p className="text-sm text-slate-500">No daily stats yet.</p> : null}
+            {dailyStats.map((stat) => (
+              <article key={stat.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                <p className="font-semibold text-slate-900">{campaigns.find((c) => c.id === stat.campaign_id)?.name ?? "Campaign"}</p>
+                <p className="mt-1 text-slate-700">{stat.stat_date} • ROAS {stat.roas.toFixed(2)} • CPM {stat.cpm.toFixed(2)} • Spend {stat.spend.toFixed(2)} EUR</p>
+                <p className="text-xs text-slate-500">Budget atteint: {stat.budget_reached ? "Oui" : "Non"}</p>
+                {stat.notes ? <p className="mt-1 text-xs text-slate-600">{stat.notes}</p> : null}
+                <button type="button" onClick={() => void deleteDailyStat(stat.id)} className="fin-btn-danger mt-2 px-2 py-1 text-xs">Delete</button>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );
