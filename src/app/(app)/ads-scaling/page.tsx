@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDateEU, formatDateTimeEU } from "@/lib/date";
 import { TEAM_MEMBERS } from "@/lib/team";
 import { useEffect, useState } from "react";
 
@@ -277,7 +278,7 @@ export default function AdsScalingPage() {
             <p className="font-semibold text-slate-900">{log.decision}</p>
             <p className="mt-1">{log.note}</p>
             <p className="mt-2 text-xs text-slate-500">
-              {new Date(log.created_at).toLocaleString("fr-FR")} - {log.author}
+              {formatDateTimeEU(log.created_at)} - {log.author}
             </p>
             <button type="button" onClick={() => void deleteLog(log.id)} className="fin-btn-danger mt-2 px-2 py-1 text-xs">
               Delete
@@ -328,7 +329,7 @@ export default function AdsScalingPage() {
             {dailyStats.map((stat) => (
               <article key={stat.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
                 <p className="font-semibold text-slate-900">{campaigns.find((c) => c.id === stat.campaign_id)?.name ?? "Campaign"}</p>
-                <p className="mt-1 text-slate-700">{stat.stat_date} • ROAS {stat.roas.toFixed(2)} • CPM {stat.cpm.toFixed(2)} • Spend {stat.spend.toFixed(2)} EUR</p>
+                <p className="mt-1 text-slate-700">{formatDateEU(stat.stat_date)} • ROAS {stat.roas.toFixed(2)} • CPM {stat.cpm.toFixed(2)} • Spend {stat.spend.toFixed(2)} EUR</p>
                 <p className="text-xs text-slate-500">Budget atteint: {stat.budget_reached ? "Oui" : "Non"}</p>
                 {stat.notes ? <p className="mt-1 text-xs text-slate-600">{stat.notes}</p> : null}
                 <button type="button" onClick={() => void deleteDailyStat(stat.id)} className="fin-btn-danger mt-2 px-2 py-1 text-xs">Delete</button>

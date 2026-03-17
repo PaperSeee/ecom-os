@@ -1,6 +1,7 @@
 "use client";
 
 import { TEAM_MEMBERS, getTeamMemberLabel } from "@/lib/team";
+import { formatDateEU } from "@/lib/date";
 import type { TodoItem } from "@/types/domain";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -102,7 +103,7 @@ export default function TodoPage() {
               <div>
                 <h2 className="text-base font-semibold text-slate-900">{item.title}</h2>
                 <p className="mt-1 text-sm text-slate-600">{item.details}</p>
-                <p className="mt-2 text-xs text-slate-500">{item.assignee} • Due {item.dueDate ?? "N/A"} • {getTeamMemberLabel(item.userId)}</p>
+                <p className="mt-2 text-xs text-slate-500">{item.assignee} • Due {item.dueDate ? formatDateEU(item.dueDate) : "N/A"} • {getTeamMemberLabel(item.userId)}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="fin-pill px-2 py-1 text-xs">{item.priority}</span>

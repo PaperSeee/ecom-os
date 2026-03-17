@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertBanner } from "@/components/ui/alert-banner";
+import { formatDateEU } from "@/lib/date";
 import { formatCurrency } from "@/lib/financial";
 import { getTeamMemberLabel, TEAM_MEMBERS } from "@/lib/team";
 import { Trash2 } from "lucide-react";
@@ -388,7 +389,7 @@ export default function FinancialTrackerPage() {
               <div key={entry.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                 <div>
                   <p className="text-slate-900">{entry.label}</p>
-                  <p className="text-xs text-slate-500">{entry.date} - {getTeamMemberLabel(entry.userId)}</p>
+                  <p className="text-xs text-slate-500">{formatDateEU(entry.date)} - {getTeamMemberLabel(entry.userId)}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <p className={entry.type === "inflow" ? "text-green-600" : "text-red-600"}>
@@ -413,7 +414,7 @@ export default function FinancialTrackerPage() {
                 <div>
                   <p className="text-slate-900">{item.label}</p>
                   <p className="text-xs text-slate-500">
-                    {item.costType === "fixed" ? "Fixed" : "Variable"} • {item.cadence} • Next: {item.nextChargeDate ?? "N/A"} • {getTeamMemberLabel(item.userId)}
+                    {item.costType === "fixed" ? "Fixed" : "Variable"} • {item.cadence} • Next: {item.nextChargeDate ? formatDateEU(item.nextChargeDate) : "N/A"} • {getTeamMemberLabel(item.userId)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

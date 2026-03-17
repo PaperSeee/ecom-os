@@ -1,6 +1,7 @@
 "use client";
 
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { formatDateTimeEU } from "@/lib/date";
 import { calculateProductMetrics, formatCurrency, formatPercent } from "@/lib/financial";
 import { getTeamMemberLabel, TEAM_MEMBERS } from "@/lib/team";
 import type { Product } from "@/types/domain";
@@ -278,7 +279,7 @@ export default function ProductLabPage() {
                       <td className="px-4 py-3 text-xs text-slate-400">
                         {getTeamMemberLabel(product.userId)}
                         <br />
-                        {new Date(product.updatedAt ?? product.createdAt).toLocaleString("fr-FR")}
+                        {formatDateTimeEU(product.updatedAt ?? product.createdAt)}
                       </td>
                       <td className="px-4 py-3">
                         <button

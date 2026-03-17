@@ -1,6 +1,7 @@
 "use client";
 
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { formatDateTimeEU } from "@/lib/date";
 import { getTeamMemberLabel, TEAM_MEMBERS } from "@/lib/team";
 import type { Associate, ChecklistCategory } from "@/types/domain";
 import { Check, ShieldAlert } from "lucide-react";
@@ -169,12 +170,12 @@ export default function LaunchpadPage() {
                 <h2 className="text-base font-semibold text-slate-900">{task.title}</h2>
                 <p className="mt-1 text-xs text-slate-500">
                   {task.validatedAt
-                    ? `Valide par ${task.validatedBy} le ${new Date(task.validatedAt).toLocaleString("fr-FR")}`
+                    ? `Valide par ${task.validatedBy} le ${formatDateTimeEU(task.validatedAt)}`
                     : "Non valide"}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
                   Derniere modif: {getTeamMemberLabel(task.userId)}
-                  {task.updatedAt ? ` - ${new Date(task.updatedAt).toLocaleString("fr-FR")}` : ""}
+                  {task.updatedAt ? ` - ${formatDateTimeEU(task.updatedAt)}` : ""}
                 </p>
               </div>
 

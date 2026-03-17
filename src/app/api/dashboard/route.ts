@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { calculateProductMetrics, formatCurrency } from "@/lib/financial";
+import { formatDateEU } from "@/lib/date";
 import { resolveSharedUserIds, supabaseAdmin } from "@/lib/server-supabase";
 
 interface ExternalMetrics {
@@ -35,7 +36,7 @@ const fetchExternalMetrics = async (): Promise<ExternalMetrics | null> => {
 export async function GET() {
   const userIds = await resolveSharedUserIds();
 
-  const [productsRes, tasksRes, alertsRes, cashflowRes] = await Promise.all([
+  const [productsRes, tasksRes, alertsRes, cashflowRes, externalMetrics] = await Promise.all([
     supabaseAdmin
       .from("products")
       .select("sale_price, cpa_estimated, product_cost, shipping_cost")
@@ -56,6 +57,7 @@ export async function GET() {
       .select("entry_date, amount, entry_type")
       .in("user_id", userIds)
       .order("entry_date", { ascending: true }),
+    fetchExternalMetrics(),
   ]);
 
   const firstError = [productsRes.error, tasksRes.error, alertsRes.error, cashflowRes.error].find(Boolean);
@@ -87,7 +89,6 @@ export async function GET() {
   }
 
   const roas = spend > 0 ? revenue / spend : 0;
-  const externalMetrics = await fetchExternalMetrics();
   const roasDisplay = typeof externalMetrics?.roas === "number" ? externalMetrics.roas : roas;
   const cpaDisplay = typeof externalMetrics?.cpa === "number" ? externalMetrics.cpa : spend > 0 && products.length > 0 ? spend / products.length : 0;
 
@@ -109,7 +110,7 @@ export async function GET() {
   const chartData = Array.from(byDate.entries())
     .slice(-7)
     .map(([date, values]) => ({
-      label: new Date(date).toLocaleDateString("fr-FR", { weekday: "short" }),
+      label: formatDateEU(date),
       revenue: values.revenue,
       spend: values.spend,
       profit: values.revenue - values.spend,
@@ -135,5 +136,6 @@ export async function GET() {
     alerts,
     progress,
     chartData,
+    generatedAt: new Date().toISOString(),
   });
 }
