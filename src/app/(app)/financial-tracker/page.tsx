@@ -372,7 +372,7 @@ export default function FinancialTrackerPage() {
               onChange={(event) => setRecurringForm((prev) => ({ ...prev, nextChargeDate: event.target.value }))}
               className="fin-input"
             />
-            <button className="rounded-lg bg-blue-100 px-4 py-2 text-sm text-blue-700 hover:bg-blue-200">
+            <button className="fin-btn-soft px-4 py-2 text-sm">
               Add Recurring
             </button>
           </div>

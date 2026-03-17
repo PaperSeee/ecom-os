@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
-import { Boxes, ChartNoAxesCombined, ChevronsLeft, ChevronsRight, Flag, Gauge, Radar, Wallet } from "lucide-react";
+import { Boxes, ChartNoAxesCombined, CheckSquare, ChevronsLeft, ChevronsRight, Flag, Gauge, Radar, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/competitors", label: "Spy Tracker", icon: Radar },
   { href: "/ads-scaling", label: "Ads & Scaling", icon: ChartNoAxesCombined },
   { href: "/financial-tracker", label: "Financial Tracker", icon: Wallet },
+  { href: "/todo", label: "Team To-Do", icon: CheckSquare },
 ];
 
 export const Sidebar = () => {
@@ -28,7 +29,7 @@ export const Sidebar = () => {
     >
       <div className="mb-5 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-2 py-3">
         <div className={cn("overflow-hidden transition-all", sidebarCollapsed ? "w-0" : "w-auto")}>
-          <p className="text-xs font-bold uppercase tracking-[0.24em] text-blue-600">E-COM-OS</p>
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-zinc-900">E-COM-OS</p>
           <p className="text-sm text-slate-500">Operating Cockpit</p>
         </div>
         <button
@@ -53,7 +54,7 @@ export const Sidebar = () => {
               className={cn(
                 "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
                 isActive
-                  ? "fin-chip text-blue-700"
+                  ? "fin-chip text-zinc-900"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
               )}
             >

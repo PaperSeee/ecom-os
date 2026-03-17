@@ -77,9 +77,9 @@ export default function DashboardPage() {
             steps={launchSteps}
             currentStep={progress < 45 ? 0 : progress < 90 ? 1 : 2}
           />
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-slate-700">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-100 p-3 text-sm text-slate-700">
             <p className="text-xs uppercase tracking-wide text-slate-500">Ready to Launch</p>
-            <p className="mt-1 text-base font-semibold text-blue-900">
+            <p className="mt-1 text-base font-semibold text-zinc-900">
               {progress >= 90 ? "Eligible" : "In Progress"}
             </p>
           </div>

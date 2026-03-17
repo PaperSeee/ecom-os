@@ -1,6 +1,5 @@
 "use client";
 
-import { AlertBanner } from "@/components/ui/alert-banner";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { getTeamMemberLabel, TEAM_MEMBERS } from "@/lib/team";
 import type { Associate, ChecklistCategory } from "@/types/domain";
@@ -95,20 +94,6 @@ export default function LaunchpadPage() {
         </div>
       </header>
 
-      {blockers.length > 0 ? (
-        <AlertBanner
-          title="Bloqueur critique actif"
-          description={`Impossible de valider Ready to Launch: ${blockers.map((b) => b.title).join(" | ")}`}
-          severity="critical"
-        />
-      ) : (
-        <AlertBanner
-          title="Aucun bloqueur critique"
-          description="Toutes les taches critiques sont validees."
-          severity="info"
-        />
-      )}
-
       <section className="grid gap-4 md:grid-cols-3">
         <div className="fin-panel p-4 md:col-span-2">
           <ProgressBar value={progress} label="Progression globale lancement" />
@@ -153,7 +138,7 @@ export default function LaunchpadPage() {
           type="button"
           onClick={() => setActiveCategory("All")}
           className={`rounded-full border px-3 py-1.5 text-xs transition ${
-            activeCategory === "All" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"
+            activeCategory === "All" ? "border-zinc-300 bg-zinc-100 text-zinc-900" : "border-slate-200 bg-white text-slate-600"
           }`}
         >
           All
@@ -164,7 +149,7 @@ export default function LaunchpadPage() {
             type="button"
             onClick={() => setActiveCategory(category)}
             className={`rounded-full border px-3 py-1.5 text-xs transition ${
-              activeCategory === category ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"
+              activeCategory === category ? "border-zinc-300 bg-zinc-100 text-zinc-900" : "border-slate-200 bg-white text-slate-600"
             }`}
           >
             {category}

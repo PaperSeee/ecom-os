@@ -2,6 +2,36 @@ import { NextResponse } from "next/server";
 import { calculateProductMetrics, formatCurrency } from "@/lib/financial";
 import { resolveSharedUserIds, supabaseAdmin } from "@/lib/server-supabase";
 
+interface ExternalMetrics {
+  roas?: number;
+  cpa?: number;
+}
+
+const fetchExternalMetrics = async (): Promise<ExternalMetrics | null> => {
+  const endpoint = process.env.EXTERNAL_METRICS_API_URL;
+  if (!endpoint) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      headers: process.env.EXTERNAL_METRICS_API_KEY
+        ? { Authorization: `Bearer ${process.env.EXTERNAL_METRICS_API_KEY}` }
+        : undefined,
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as ExternalMetrics;
+    return payload;
+  } catch {
+    return null;
+  }
+};
+
 export async function GET() {
   const userIds = await resolveSharedUserIds();
 
@@ -57,7 +87,9 @@ export async function GET() {
   }
 
   const roas = spend > 0 ? revenue / spend : 0;
-  const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+  const externalMetrics = await fetchExternalMetrics();
+  const roasDisplay = typeof externalMetrics?.roas === "number" ? externalMetrics.roas : roas;
+  const cpaDisplay = typeof externalMetrics?.cpa === "number" ? externalMetrics.cpa : spend > 0 && products.length > 0 ? spend / products.length : 0;
 
   const blockers = tasks.filter((task) => task.is_critical && !task.validated_at);
   const progress = tasks.length > 0 ? Math.round((tasks.filter((task) => task.validated_at).length / tasks.length) * 100) : 0;
@@ -93,8 +125,8 @@ export async function GET() {
       trend: profit >= 0 ? "up" : "down",
       trendValue: profit >= 0 ? "Profitable" : "Sous seuil",
     },
-    { id: "roas", label: "ROAS", value: roas.toFixed(2), trend: roas >= 2 ? "up" : "down", trendValue: "Live" },
-    { id: "margin", label: "Marge nette", value: `${margin.toFixed(1)}%`, trend: "flat", trendValue: "Live" },
+    { id: "roas", label: "ROAS", value: roasDisplay.toFixed(2), trend: roasDisplay >= 2 ? "up" : "down", trendValue: externalMetrics ? "API" : "Live" },
+    { id: "cpa", label: "CPA", value: formatCurrency(cpaDisplay), trend: cpaDisplay <= 18 ? "up" : "down", trendValue: externalMetrics ? "API" : "Estimate" },
   ];
 
   return NextResponse.json({

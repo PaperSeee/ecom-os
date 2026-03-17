@@ -3,11 +3,21 @@ import { resolveSharedUserIds, supabaseAdmin } from "@/lib/server-supabase";
 
 export async function GET() {
   const userIds = await resolveSharedUserIds();
-  const { data, error } = await supabaseAdmin
+  let { data, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, product_cost, shipping_cost, cpa_estimated, sale_price, created_at, updated_at, user_id")
+    .select("id, name, product_cost, shipping_cost, cpa_estimated, sale_price, image_url, product_url, competitors, created_at, updated_at, user_id")
     .in("user_id", userIds)
     .order("updated_at", { ascending: false });
+
+  if (error?.message.includes("image_url") || error?.message.includes("product_url") || error?.message.includes("competitors")) {
+    const fallback = await supabaseAdmin
+      .from("products")
+      .select("id, name, product_cost, shipping_cost, cpa_estimated, sale_price, created_at, updated_at, user_id")
+      .in("user_id", userIds)
+      .order("updated_at", { ascending: false });
+    data = fallback.data as typeof data;
+    error = fallback.error;
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -20,6 +30,9 @@ export async function GET() {
     shippingCost: Number(row.shipping_cost),
     cpaEstimated: Number(row.cpa_estimated),
     price: Number(row.sale_price),
+    imageUrl: row.image_url ?? undefined,
+    productUrl: row.product_url ?? undefined,
+    competitors: row.competitors ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     userId: row.user_id,
@@ -36,12 +49,15 @@ export async function POST(request: NextRequest) {
     shippingCost: number;
     cpaEstimated: number;
     price: number;
+    imageUrl?: string;
+    productUrl?: string;
+    competitors?: string;
   };
 
   const userIds = await resolveSharedUserIds();
   const actorUserId = payload.actorUserId && userIds.includes(payload.actorUserId) ? payload.actorUserId : userIds[0];
 
-  const { data, error } = await supabaseAdmin
+  let { data, error } = await supabaseAdmin
     .from("products")
     .insert({
       user_id: actorUserId,
@@ -50,12 +66,36 @@ export async function POST(request: NextRequest) {
       shipping_cost: payload.shippingCost,
       cpa_estimated: payload.cpaEstimated,
       sale_price: payload.price,
+      image_url: payload.imageUrl?.trim() || null,
+      product_url: payload.productUrl?.trim() || null,
+      competitors: payload.competitors?.trim() || null,
     })
     .select("id")
     .single();
 
+  if (error?.message.includes("image_url") || error?.message.includes("product_url") || error?.message.includes("competitors")) {
+    const fallback = await supabaseAdmin
+      .from("products")
+      .insert({
+        user_id: actorUserId,
+        name: payload.name,
+        product_cost: payload.productCost,
+        shipping_cost: payload.shippingCost,
+        cpa_estimated: payload.cpaEstimated,
+        sale_price: payload.price,
+      })
+      .select("id")
+      .single();
+    data = fallback.data;
+    error = fallback.error;
+  }
+
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!data) {
+    return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

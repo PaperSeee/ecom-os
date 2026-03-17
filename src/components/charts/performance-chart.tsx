@@ -37,7 +37,7 @@ export const PerformanceChart = ({ data }: PerformanceChartProps) => {
               color: "#0f172a",
             }}
           />
-          <Line type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={2.4} dot={false} />
+          <Line type="monotone" dataKey="revenue" stroke="#18181b" strokeWidth={2.4} dot={false} />
           <Line type="monotone" dataKey="spend" stroke="#f59e0b" strokeWidth={2.1} dot={false} />
           <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2.4} dot={false} />
         </LineChart>

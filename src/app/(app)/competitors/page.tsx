@@ -176,11 +176,11 @@ export default function CompetitorsPage() {
             </div>
             <p className="mt-2 text-sm text-slate-600">{competitor.marketingAngle}</p>
             <p className="mt-1 text-sm text-slate-500">{competitor.observations}</p>
-            <div className="mt-3 flex flex-wrap gap-3 text-xs text-blue-700">
-              <a href={competitor.storeUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-blue-900">
+            <div className="mt-3 flex flex-wrap gap-3 text-xs text-zinc-700">
+              <a href={competitor.storeUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-zinc-900">
                 Store URL
               </a>
-              <a href={competitor.adLibraryUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-blue-900">
+              <a href={competitor.adLibraryUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-zinc-900">
                 Ad Library
               </a>
               <button type="button" onClick={() => startEdit(competitor)} className="fin-btn-soft px-2 py-1">

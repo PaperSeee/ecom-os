@@ -17,7 +17,7 @@ export const Stepper = ({ steps, currentStep }: StepperProps) => {
               isDone
                 ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                 : isCurrent
-                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  ? "border-zinc-300 bg-zinc-100 text-zinc-900"
                   : "border-slate-200 bg-white text-slate-500"
             }`}
           >

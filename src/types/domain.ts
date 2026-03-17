@@ -13,6 +13,9 @@ export interface Product {
   productCost: number;
   shippingCost: number;
   cpaEstimated: number;
+  imageUrl?: string;
+  productUrl?: string;
+  competitors?: string;
   createdAt: string;
   updatedAt?: string;
   userId?: string;
@@ -71,8 +74,9 @@ export interface Campaign {
   platform: "Meta" | "TikTok";
   name: string;
   budget: number;
+  dailyBudget?: number;
   roas: number;
-  status: "active" | "testing" | "paused";
+  status: "testing" | "paused" | "stopped" | "scaling";
 }
 
 export interface ScalingLog {
@@ -90,4 +94,17 @@ export interface CashflowEntry {
   label: string;
   amount: number;
   date: string;
+}
+
+export interface TodoItem {
+  id: string;
+  title: string;
+  details: string;
+  priority: "low" | "medium" | "high";
+  status: "todo" | "in_progress" | "done";
+  dueDate: string | null;
+  assignee: string;
+  createdAt: string;
+  updatedAt: string;
+  userId?: string;
 }

@@ -5,6 +5,7 @@ import { calculateProductMetrics, formatCurrency, formatPercent } from "@/lib/fi
 import { getTeamMemberLabel, TEAM_MEMBERS } from "@/lib/team";
 import type { Product } from "@/types/domain";
 import { Trash2 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 interface ProductInput {
@@ -13,6 +14,9 @@ interface ProductInput {
   productCost: number;
   shippingCost: number;
   cpaEstimated: number;
+  imageUrl: string;
+  productUrl: string;
+  competitors: string;
 }
 
 const initialState: ProductInput = {
@@ -21,6 +25,9 @@ const initialState: ProductInput = {
   productCost: 8,
   shippingCost: 4.5,
   cpaEstimated: 12,
+  imageUrl: "",
+  productUrl: "",
+  competitors: "",
 };
 
 export default function ProductLabPage() {
@@ -52,9 +59,10 @@ export default function ProductLabPage() {
   }, []);
 
   const onFieldChange = (field: keyof ProductInput, value: string) => {
+    const numericFields: Array<keyof ProductInput> = ["price", "productCost", "shippingCost", "cpaEstimated"];
     setForm((prev) => ({
       ...prev,
-      [field]: field === "name" ? value : Number(value),
+      [field]: numericFields.includes(field) ? Number(value) : value,
     }));
   };
 
@@ -160,6 +168,35 @@ export default function ProductLabPage() {
                 className="fin-input mt-1"
               />
             </label>
+            <label className="text-sm text-slate-700 sm:col-span-2">
+              URL Photo Produit
+              <input
+                type="url"
+                value={form.imageUrl}
+                onChange={(event) => onFieldChange("imageUrl", event.target.value)}
+                className="fin-input mt-1"
+                placeholder="https://..."
+              />
+            </label>
+            <label className="text-sm text-slate-700 sm:col-span-2">
+              Lien Produit
+              <input
+                type="url"
+                value={form.productUrl}
+                onChange={(event) => onFieldChange("productUrl", event.target.value)}
+                className="fin-input mt-1"
+                placeholder="https://store.com/product"
+              />
+            </label>
+            <label className="text-sm text-slate-700 sm:col-span-2">
+              Concurrents (liste ou notes)
+              <textarea
+                value={form.competitors}
+                onChange={(event) => onFieldChange("competitors", event.target.value)}
+                className="fin-input mt-1 min-h-[78px]"
+                placeholder="Brand A, Brand B, angle pricing..."
+              />
+            </label>
           </div>
 
           <button
@@ -195,6 +232,7 @@ export default function ProductLabPage() {
                 <th className="px-4 py-3">Profit unitaire</th>
                 <th className="px-4 py-3">Marge nette</th>
                 <th className="px-4 py-3">ROAS BE</th>
+                <th className="px-4 py-3">Assets</th>
                 <th className="px-4 py-3">Derniere modif</th>
                 <th className="px-4 py-3">Action</th>
               </tr>
@@ -202,7 +240,7 @@ export default function ProductLabPage() {
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
                     Aucun produit. Ajoutez un SKU pour lancer les calculs.
                   </td>
                 </tr>
@@ -220,6 +258,22 @@ export default function ProductLabPage() {
                       <td className="px-4 py-3">{formatPercent(metrics.netMarginPercent)}</td>
                       <td className="px-4 py-3">
                         {Number.isFinite(metrics.breakEvenRoas) ? metrics.breakEvenRoas.toFixed(2) : "N/A"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-500">
+                        <div className="space-y-1">
+                          {product.imageUrl ? (
+                            <a className="inline-flex items-center gap-2 text-slate-900 underline" href={product.imageUrl} target="_blank" rel="noreferrer">
+                              <Image src={product.imageUrl} alt={product.name} width={28} height={28} className="h-7 w-7 rounded object-cover" />
+                              Photo
+                            </a>
+                          ) : null}
+                          {product.productUrl ? (
+                            <a className="text-slate-900 underline" href={product.productUrl} target="_blank" rel="noreferrer">
+                              Product Link
+                            </a>
+                          ) : null}
+                          {product.competitors ? <p className="line-clamp-2">{product.competitors}</p> : null}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-slate-400">
                         {getTeamMemberLabel(product.userId)}

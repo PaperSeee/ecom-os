@@ -16,7 +16,7 @@ export const ProgressBar = ({ value, label }: ProgressBarProps) => {
       ) : null}
       <div className="h-2.5 w-full rounded-full bg-slate-200" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={safeValue}>
         <div
-          className="h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500"
+          className="h-2.5 rounded-full bg-gradient-to-r from-zinc-900 to-zinc-700 transition-all duration-500"
           style={{ width: `${safeValue}%` }}
         />
       </div>

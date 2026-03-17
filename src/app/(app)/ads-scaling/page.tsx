@@ -8,8 +8,9 @@ interface Campaign {
   platform: "Meta" | "TikTok";
   name: string;
   budget: number;
+  daily_budget?: number;
   roas: number;
-  status: "active" | "testing" | "paused";
+  status: "testing" | "paused" | "stopped" | "scaling";
 }
 
 interface ScalingLog {
@@ -28,9 +29,9 @@ export default function AdsScalingPage() {
   const [campaignForm, setCampaignForm] = useState({
     platform: "Meta" as "Meta" | "TikTok",
     name: "",
-    budget: 0,
+    dailyBudget: 0,
     roas: 0,
-    status: "testing" as "active" | "testing" | "paused",
+    status: "testing" as "testing" | "paused" | "stopped" | "scaling",
   });
   const [logForm, setLogForm] = useState({
     campaignId: "",
@@ -65,7 +66,7 @@ export default function AdsScalingPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ entity: "campaign", actorUserId, ...campaignForm }),
     });
-    setCampaignForm({ platform: "Meta", name: "", budget: 0, roas: 0, status: "testing" });
+    setCampaignForm({ platform: "Meta", name: "", dailyBudget: 0, roas: 0, status: "testing" });
     await loadAds();
   };
 
@@ -73,7 +74,7 @@ export default function AdsScalingPage() {
     await fetch("/api/ads", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: campaign.id, actorUserId, budget: campaign.budget, roas: campaign.roas, status: campaign.status, name: campaign.name }),
+      body: JSON.stringify({ id: campaign.id, actorUserId, dailyBudget: campaign.daily_budget ?? campaign.budget, roas: campaign.roas, status: campaign.status, name: campaign.name }),
     });
     await loadAds();
   };
@@ -122,13 +123,14 @@ export default function AdsScalingPage() {
               <option value="Meta">Meta</option>
               <option value="TikTok">TikTok</option>
             </select>
-            <select value={campaignForm.status} onChange={(event) => setCampaignForm((prev) => ({ ...prev, status: event.target.value as "active" | "testing" | "paused" }))} className="fin-input">
-              <option value="active">active</option>
+            <select value={campaignForm.status} onChange={(event) => setCampaignForm((prev) => ({ ...prev, status: event.target.value as "testing" | "paused" | "stopped" | "scaling" }))} className="fin-input">
               <option value="testing">testing</option>
               <option value="paused">paused</option>
+              <option value="stopped">stopped</option>
+              <option value="scaling">scaling</option>
             </select>
             <input value={campaignForm.name} onChange={(event) => setCampaignForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Campaign name" className="fin-input sm:col-span-2" />
-            <input type="number" step="0.01" value={campaignForm.budget} onChange={(event) => setCampaignForm((prev) => ({ ...prev, budget: Number(event.target.value) }))} placeholder="Budget" className="fin-input" />
+            <input type="number" step="0.01" value={campaignForm.dailyBudget} onChange={(event) => setCampaignForm((prev) => ({ ...prev, dailyBudget: Number(event.target.value) }))} placeholder="Daily budget" className="fin-input" />
             <input type="number" step="0.01" value={campaignForm.roas} onChange={(event) => setCampaignForm((prev) => ({ ...prev, roas: Number(event.target.value) }))} placeholder="ROAS" className="fin-input" />
             <button className="fin-btn-primary px-4 py-2 text-sm sm:col-span-2 interactive-pulse">Add Campaign</button>
           </div>
@@ -159,12 +161,13 @@ export default function AdsScalingPage() {
             <p className="text-xs uppercase tracking-wide text-slate-500">{campaign.platform}</p>
             <input className="fin-input mt-1 text-base font-semibold" value={campaign.name} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, name: event.target.value } : item))} />
             <div className="mt-3 grid grid-cols-3 gap-2 text-sm text-slate-700">
-              <input type="number" step="0.01" className="fin-input px-2 py-1" value={campaign.budget} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, budget: Number(event.target.value) } : item))} />
+              <input type="number" step="0.01" className="fin-input px-2 py-1" value={campaign.daily_budget ?? campaign.budget} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, daily_budget: Number(event.target.value), budget: Number(event.target.value) } : item))} />
               <input type="number" step="0.01" className="fin-input px-2 py-1" value={campaign.roas} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, roas: Number(event.target.value) } : item))} />
-              <select className="fin-input px-2 py-1" value={campaign.status} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, status: event.target.value as "active" | "testing" | "paused" } : item))}>
-                <option value="active">active</option>
+              <select className="fin-input px-2 py-1" value={campaign.status} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, status: event.target.value as "testing" | "paused" | "stopped" | "scaling" } : item))}>
                 <option value="testing">testing</option>
                 <option value="paused">paused</option>
+                <option value="stopped">stopped</option>
+                <option value="scaling">scaling</option>
               </select>
             </div>
             <div className="mt-3 flex gap-2">
