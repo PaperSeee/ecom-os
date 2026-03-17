@@ -29,3 +29,19 @@ export const resolveSharedUserIds = async (): Promise<string[]> => {
 
   return Array.from(new Set(data.map((row) => row.user_id).filter((value): value is string => Boolean(value))));
 };
+
+export const resolveSharedWorkspaceId = async (): Promise<string | null> => {
+  const { data, error } = await supabaseAdmin
+    .from("workspaces")
+    .select("id")
+    .eq("name", DEFAULT_WORKSPACE_NAME)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data.id;
+};

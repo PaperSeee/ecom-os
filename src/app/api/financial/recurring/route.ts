@@ -2,54 +2,57 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveSharedUserIds, resolveSharedWorkspaceId, supabaseAdmin } from "@/lib/server-supabase";
 
 export async function GET() {
-  const userIds = await resolveSharedUserIds();
+  const workspaceId = await resolveSharedWorkspaceId();
+  if (!workspaceId) {
+    return NextResponse.json({ recurring: [] });
+  }
 
   const { data, error } = await supabaseAdmin
-    .from("cashflow_entries")
-    .select("id, entry_type, label, amount, entry_date, user_id")
-    .in("user_id", userIds)
-    .order("entry_date", { ascending: false })
-    .limit(50);
+    .from("recurring_costs")
+    .select("id, label, amount, cost_type, cadence, user_id, updated_at")
+    .eq("workspace_id", workspaceId)
+    .order("updated_at", { ascending: false });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const entries = (data ?? []).map((row) => ({
+  const recurring = (data ?? []).map((row) => ({
     id: row.id,
-    type: row.entry_type,
     label: row.label,
     amount: Number(row.amount),
-    date: row.entry_date,
+    costType: row.cost_type as "fixed" | "variable",
+    cadence: row.cadence,
     userId: row.user_id,
+    updatedAt: row.updated_at,
   }));
 
-  return NextResponse.json({ entries });
+  return NextResponse.json({ recurring });
 }
 
 export async function POST(request: NextRequest) {
   const payload = (await request.json()) as {
     actorUserId?: string;
-    type: "inflow" | "outflow";
     label: string;
     amount: number;
-    date: string;
+    costType: "fixed" | "variable";
   };
 
-  const userIds = await resolveSharedUserIds();
   const workspaceId = await resolveSharedWorkspaceId();
   if (!workspaceId) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 400 });
   }
+
+  const userIds = await resolveSharedUserIds();
   const actorUserId = payload.actorUserId && userIds.includes(payload.actorUserId) ? payload.actorUserId : userIds[0];
 
-  const { error } = await supabaseAdmin.from("cashflow_entries").insert({
-    user_id: actorUserId,
+  const { error } = await supabaseAdmin.from("recurring_costs").insert({
     workspace_id: workspaceId,
-    entry_type: payload.type,
+    user_id: actorUserId,
     label: payload.label,
     amount: payload.amount,
-    entry_date: payload.date,
+    cost_type: payload.costType,
+    cadence: "monthly",
   });
 
   if (error) {
@@ -65,7 +68,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
   }
 
-  const { error } = await supabaseAdmin.from("cashflow_entries").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("recurring_costs").delete().eq("id", id);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
