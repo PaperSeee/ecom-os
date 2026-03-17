@@ -5,3 +5,12 @@ export const TEAM_MEMBERS = [
 
 export const TEAM_USER_IDS = TEAM_MEMBERS.map((member) => member.id);
 export const DEFAULT_WORKSPACE_NAME = "E-COM-OS Team";
+
+export const getTeamMemberLabel = (userId: string | null | undefined): string => {
+  if (!userId) {
+    return "Unknown";
+  }
+
+  const member = TEAM_MEMBERS.find((item) => item.id === userId);
+  return member?.label ?? "Unknown";
+};

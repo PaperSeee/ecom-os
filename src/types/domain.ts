@@ -14,6 +14,8 @@ export interface Product {
   shippingCost: number;
   cpaEstimated: number;
   createdAt: string;
+  updatedAt?: string;
+  userId?: string;
 }
 
 export interface ProductMetrics {
@@ -42,6 +44,8 @@ export interface LaunchpadTask {
   validatedAt: string | null;
   validatedBy: Associate | null;
   sortOrder: number;
+  updatedAt?: string;
+  userId?: string;
 }
 
 export interface AlertItem {

@@ -2,7 +2,7 @@
 
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { calculateProductMetrics, formatCurrency, formatPercent } from "@/lib/financial";
-import { TEAM_MEMBERS } from "@/lib/team";
+import { getTeamMemberLabel, TEAM_MEMBERS } from "@/lib/team";
 import type { Product } from "@/types/domain";
 import { Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -30,18 +30,25 @@ export default function ProductLabPage() {
 
   const preview = useMemo(() => calculateProductMetrics(form), [form]);
 
-  const loadProducts = async () => {
+  const fetchProducts = async (): Promise<Product[]> => {
     const response = await fetch("/api/products", { cache: "no-store" });
     if (!response.ok) {
-      return;
+      return [];
     }
 
     const payload = (await response.json()) as { products: Product[] };
-    setProducts(payload.products);
+    return payload.products;
+  };
+
+  const loadProducts = async () => {
+    const nextProducts = await fetchProducts();
+    setProducts(nextProducts);
   };
 
   useEffect(() => {
-    void loadProducts();
+    void fetchProducts().then((nextProducts) => {
+      setProducts(nextProducts);
+    });
   }, []);
 
   const onFieldChange = (field: keyof ProductInput, value: string) => {
@@ -69,7 +76,7 @@ export default function ProductLabPage() {
   };
 
   const removeProduct = async (id: string) => {
-    await fetch(`/api/products?id=${id}`, { method: "DELETE" });
+    await fetch(`/api/products?id=${id}&actorUserId=${actorUserId}`, { method: "DELETE" });
     await loadProducts();
   };
 
@@ -188,13 +195,14 @@ export default function ProductLabPage() {
                 <th className="px-4 py-3">Profit unitaire</th>
                 <th className="px-4 py-3">Marge nette</th>
                 <th className="px-4 py-3">ROAS BE</th>
+                <th className="px-4 py-3">Derniere modif</th>
                 <th className="px-4 py-3">Action</th>
               </tr>
             </thead>
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                     Aucun produit. Ajoutez un SKU pour lancer les calculs.
                   </td>
                 </tr>
@@ -212,6 +220,11 @@ export default function ProductLabPage() {
                       <td className="px-4 py-3">{formatPercent(metrics.netMarginPercent)}</td>
                       <td className="px-4 py-3">
                         {Number.isFinite(metrics.breakEvenRoas) ? metrics.breakEvenRoas.toFixed(2) : "N/A"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-400">
+                        {getTeamMemberLabel(product.userId)}
+                        <br />
+                        {new Date(product.updatedAt ?? product.createdAt).toLocaleString("fr-FR")}
                       </td>
                       <td className="px-4 py-3">
                         <button

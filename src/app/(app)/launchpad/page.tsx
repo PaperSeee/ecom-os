@@ -2,6 +2,7 @@
 
 import { AlertBanner } from "@/components/ui/alert-banner";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { getTeamMemberLabel, TEAM_MEMBERS } from "@/lib/team";
 import type { Associate, ChecklistCategory } from "@/types/domain";
 import { Check, ShieldAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -17,6 +18,8 @@ interface LaunchpadTaskApi {
   validatedAt: string | null;
   validatedBy: Associate | null;
   sortOrder: number;
+  userId?: string;
+  updatedAt?: string;
 }
 
 const computeProgress = (tasks: LaunchpadTaskApi[]): number =>
@@ -29,6 +32,7 @@ export default function LaunchpadPage() {
   const [tasks, setTasks] = useState<LaunchpadTaskApi[]>([]);
   const [activeCategory, setActiveCategory] = useState<ChecklistCategory | "All">("All");
   const [validator, setValidator] = useState<Associate>("Associate A");
+  const [actorUserId, setActorUserId] = useState<string>(TEAM_MEMBERS[0].id);
 
   const fetchTasks = async (): Promise<LaunchpadTaskApi[]> => {
     const response = await fetch("/api/launchpad", { cache: "no-store" });
@@ -59,7 +63,7 @@ export default function LaunchpadPage() {
     await fetch("/api/launchpad", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: taskId, action, value, validator }),
+      body: JSON.stringify({ id: taskId, action, value, validator, actorUserId }),
     });
     await loadTasks();
   };
@@ -110,6 +114,22 @@ export default function LaunchpadPage() {
           <ProgressBar value={progress} label="Progression globale lancement" />
         </div>
         <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+          <label htmlFor="actor" className="text-xs uppercase tracking-wide text-slate-400">
+            Auteur modif
+          </label>
+          <select
+            id="actor"
+            className="mt-2 mb-3 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none ring-cyan-400 focus:ring"
+            value={actorUserId}
+            onChange={(event) => setActorUserId(event.target.value)}
+          >
+            {TEAM_MEMBERS.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.label}
+              </option>
+            ))}
+          </select>
+
           <label htmlFor="validator" className="text-xs uppercase tracking-wide text-slate-400">
             Valide par
           </label>
@@ -166,6 +186,10 @@ export default function LaunchpadPage() {
                   {task.validatedAt
                     ? `Valide par ${task.validatedBy} le ${new Date(task.validatedAt).toLocaleString("fr-FR")}`
                     : "Non valide"}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Derniere modif: {getTeamMemberLabel(task.userId)}
+                  {task.updatedAt ? ` - ${new Date(task.updatedAt).toLocaleString("fr-FR")}` : ""}
                 </p>
               </div>
 

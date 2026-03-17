@@ -5,7 +5,7 @@ export async function GET() {
   const userIds = await resolveSharedUserIds();
   const { data, error } = await supabaseAdmin
     .from("checklist_tasks")
-    .select("id, title, category, is_critical, assignee, validated_at, validated_by, sort_order, user_id")
+    .select("id, title, category, is_critical, assignee, validated_at, validated_by, sort_order, user_id, updated_at")
     .in("user_id", userIds)
     .order("sort_order", { ascending: true });
 
@@ -23,6 +23,7 @@ export async function GET() {
     validatedBy: row.validated_by,
     sortOrder: row.sort_order,
     userId: row.user_id,
+    updatedAt: row.updated_at,
   }));
 
   return NextResponse.json({ tasks });
@@ -34,6 +35,7 @@ export async function PATCH(request: NextRequest) {
     action: "assign" | "toggle-critical" | "toggle-validation";
     value?: string;
     validator?: string;
+    actorUserId?: string;
   };
 
   if (!payload.id) {
@@ -50,10 +52,13 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: currentError?.message ?? "Task not found" }, { status: 404 });
   }
 
+  const userIds = await resolveSharedUserIds();
+  const actorUserId = payload.actorUserId && userIds.includes(payload.actorUserId) ? payload.actorUserId : userIds[0];
+
   if (payload.action === "assign") {
     const { error } = await supabaseAdmin
       .from("checklist_tasks")
-      .update({ assignee: payload.value })
+      .update({ assignee: payload.value, user_id: actorUserId })
       .eq("id", payload.id);
 
     if (error) {
@@ -64,7 +69,7 @@ export async function PATCH(request: NextRequest) {
   if (payload.action === "toggle-critical") {
     const { error } = await supabaseAdmin
       .from("checklist_tasks")
-      .update({ is_critical: !current.is_critical })
+      .update({ is_critical: !current.is_critical, user_id: actorUserId })
       .eq("id", payload.id);
 
     if (error) {
@@ -78,7 +83,7 @@ export async function PATCH(request: NextRequest) {
 
     const { error } = await supabaseAdmin
       .from("checklist_tasks")
-      .update({ validated_at: nextValidatedAt, validated_by: nextValidatedBy })
+      .update({ validated_at: nextValidatedAt, validated_by: nextValidatedBy, user_id: actorUserId })
       .eq("id", payload.id);
 
     if (error) {
