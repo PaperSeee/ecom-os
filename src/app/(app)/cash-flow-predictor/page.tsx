@@ -4,7 +4,6 @@ import { formatCurrency } from "@/lib/financial";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 
-type CogsMode = "percent" | "fixed-per-order";
 type ScenarioKey = "pessimistic" | "base" | "aggressive";
 
 interface SimulationRow {
@@ -12,10 +11,10 @@ interface SimulationRow {
   label: string;
   adSpend: number;
   grossRevenue: number;
-  cogsOut: number;
   payoutFeesOut: number;
   vatOut: number;
   refundsOut: number;
+  pendingPayout: number;
   payoutIn: number;
   netFlow: number;
   balance: number;
@@ -45,8 +44,6 @@ interface ScenarioConfig {
   budgetMultiplier: number;
   roasMultiplier: number;
   payoutDelayOffsetDays: number;
-  cogsPercentOffset: number;
-  fixedCogsMultiplier: number;
   refundPercentOffset: number;
 }
 
@@ -98,29 +95,45 @@ const applyNoise = (value: number, volatilityPercent: number, seed: number): num
   return value * (1 + drift);
 };
 
+const collectWeeklyPayout = (
+  delayedPayouts: Map<number, number>,
+  day: number,
+  isPayoutDay: boolean,
+): { payoutInToday: number; pendingPayout: number } => {
+  let payoutInToday = 0;
+  let pendingPayout = 0;
+
+  for (const [eligibleDay, amount] of delayedPayouts.entries()) {
+    if (eligibleDay <= day) {
+      if (isPayoutDay) {
+        payoutInToday += amount;
+        delayedPayouts.delete(eligibleDay);
+      } else {
+        pendingPayout += amount;
+      }
+    }
+  }
+
+  return { payoutInToday, pendingPayout };
+};
+
 const scenarioConfigs: Record<ScenarioKey, ScenarioConfig> = {
   pessimistic: {
     budgetMultiplier: 1,
     roasMultiplier: 0.8,
     payoutDelayOffsetDays: 2,
-    cogsPercentOffset: 5,
-    fixedCogsMultiplier: 1.1,
     refundPercentOffset: 2,
   },
   base: {
     budgetMultiplier: 1,
     roasMultiplier: 1,
     payoutDelayOffsetDays: 0,
-    cogsPercentOffset: 0,
-    fixedCogsMultiplier: 1,
     refundPercentOffset: 0,
   },
   aggressive: {
     budgetMultiplier: 1.08,
     roasMultiplier: 1.15,
     payoutDelayOffsetDays: -1,
-    cogsPercentOffset: -3,
-    fixedCogsMultiplier: 0.95,
     refundPercentOffset: -1,
   },
 };
@@ -131,11 +144,9 @@ export default function CashFlowPredictorPage() {
   const [roas, setRoas] = useState<number>(1.9);
   const [netMarginPercent, setNetMarginPercent] = useState<number>(20);
   const [payoutDelayDays, setPayoutDelayDays] = useState<number>(5);
+  const [payoutCadenceDays, setPayoutCadenceDays] = useState<number>(7);
+  const [firstPayoutInDays, setFirstPayoutInDays] = useState<number>(7);
   const [horizonDays, setHorizonDays] = useState<number>(60);
-  const [cogsMode, setCogsMode] = useState<CogsMode>("percent");
-  const [cogsPercent, setCogsPercent] = useState<number>(35);
-  const [cogsPerOrder, setCogsPerOrder] = useState<number>(12);
-  const [avgOrderValue, setAvgOrderValue] = useState<number>(45);
   const [scalingEnabled, setScalingEnabled] = useState<boolean>(true);
   const [scalingIncreasePercent, setScalingIncreasePercent] = useState<number>(20);
   const [scalingEveryDays, setScalingEveryDays] = useState<number>(7);
@@ -146,11 +157,13 @@ export default function CashFlowPredictorPage() {
   const [monteCarloEnabled, setMonteCarloEnabled] = useState<boolean>(false);
   const [mcIterations, setMcIterations] = useState<number>(400);
   const [mcRoasVolatility, setMcRoasVolatility] = useState<number>(18);
-  const [mcCogsVolatility, setMcCogsVolatility] = useState<number>(10);
   const [mcRefundVolatility, setMcRefundVolatility] = useState<number>(25);
   const [mcPayoutJitterDays, setMcPayoutJitterDays] = useState<number>(1);
 
   const simulation = useMemo(() => {
+    const cadence = Math.max(1, payoutCadenceDays);
+    const firstPayout = clamp(firstPayoutInDays, 1, 21);
+
     const runScenario = (scenarioKey: ScenarioKey): ScenarioSimulation => {
       const rows: SimulationRow[] = [];
       const delayedPayouts = new Map<number, number>();
@@ -158,7 +171,6 @@ export default function CashFlowPredictorPage() {
       const config = scenarioConfigs[scenarioKey];
       const scenarioPayoutDelay = clamp(payoutDelayDays + config.payoutDelayOffsetDays, 1, 21);
       const scenarioRefundPercent = clamp(refundPercent + config.refundPercentOffset, 0, 40);
-      const scenarioCogsPercent = clamp(cogsPercent + config.cogsPercentOffset, 0, 95);
 
       let balance = startingCapital;
       let breakDay: number | null = null;
@@ -175,38 +187,35 @@ export default function CashFlowPredictorPage() {
           (1 + (scalingIncreasePercent / 100)) ** scalingFactor;
 
         const grossRevenue = adSpend * Math.max(0.2, roas * config.roasMultiplier);
-        const cogsOut =
-          cogsMode === "percent"
-            ? grossRevenue * (scenarioCogsPercent / 100)
-            : (grossRevenue / Math.max(10, avgOrderValue)) * Math.max(0, cogsPerOrder * config.fixedCogsMultiplier);
-
         const payoutFeesOut = grossRevenue * (clamp(paymentFeePercent, 0, 12) / 100);
         const vatOut = grossRevenue * (clamp(vatPercent, 0, 30) / 100);
         const refundsOut = grossRevenue * (scenarioRefundPercent / 100);
-        const payoutIn = Math.max(0, grossRevenue - payoutFeesOut - vatOut - refundsOut);
+        const payoutNet = Math.max(0, grossRevenue - payoutFeesOut - vatOut - refundsOut);
 
-        const payoutDay = day + scenarioPayoutDelay;
-        delayedPayouts.set(payoutDay, (delayedPayouts.get(payoutDay) ?? 0) + payoutIn);
+        const eligiblePayoutDay = day + scenarioPayoutDelay;
+        delayedPayouts.set(eligiblePayoutDay, (delayedPayouts.get(eligiblePayoutDay) ?? 0) + payoutNet);
 
-        const payoutInToday = delayedPayouts.get(day) ?? 0;
-        const netFlow = payoutInToday - adSpend - cogsOut;
+        const isPayoutDay = day >= firstPayout && (day - firstPayout) % cadence === 0;
+        const { payoutInToday, pendingPayout } = collectWeeklyPayout(delayedPayouts, day, isPayoutDay);
+
+        const netFlow = payoutInToday - adSpend;
         balance += netFlow;
 
         if (breakDay === null && balance < 0) {
           breakDay = day;
         }
 
-        const effectiveMargin = grossRevenue > 0 ? ((payoutIn - adSpend - cogsOut) / grossRevenue) * 100 : 0;
+        const effectiveMargin = grossRevenue > 0 ? ((payoutNet - adSpend) / grossRevenue) * 100 : 0;
 
         rows.push({
           day,
           label: `J+${day}`,
           adSpend,
           grossRevenue,
-          cogsOut,
           payoutFeesOut,
           vatOut,
           refundsOut,
+          pendingPayout,
           payoutIn: payoutInToday,
           netFlow,
           balance,
@@ -266,26 +275,23 @@ export default function CashFlowPredictorPage() {
           const dayRoas = clamp(applyNoise(roas, mcRoasVolatility, run * 1000 + day * 7 + 11), 0.2, 8);
           const grossRevenue = adSpend * dayRoas;
 
-          const cogsOut =
-            cogsMode === "percent"
-              ? grossRevenue * (clamp(applyNoise(cogsPercent, mcCogsVolatility, run * 1000 + day * 13 + 17), 0, 95) / 100)
-              : (grossRevenue / Math.max(10, avgOrderValue)) * Math.max(0, applyNoise(cogsPerOrder, mcCogsVolatility, run * 1000 + day * 19 + 23));
-
           const payoutFeesOut = grossRevenue * (clamp(paymentFeePercent, 0, 12) / 100);
           const vatOut = grossRevenue * (clamp(vatPercent, 0, 30) / 100);
           const refundRate = clamp(applyNoise(refundPercent, mcRefundVolatility, run * 1000 + day * 29 + 31), 0, 40);
           const refundsOut = grossRevenue * (refundRate / 100);
-          const payoutIn = Math.max(0, grossRevenue - payoutFeesOut - vatOut - refundsOut);
+          const payoutNet = Math.max(0, grossRevenue - payoutFeesOut - vatOut - refundsOut);
 
           const jitter =
             mcPayoutJitterDays > 0
               ? Math.round(seededNoise(run * 1000 + day * 37 + 41) * mcPayoutJitterDays)
               : 0;
-          const payoutDay = day + clamp(payoutDelayDays + jitter, 1, 21);
-          delayedPayouts.set(payoutDay, (delayedPayouts.get(payoutDay) ?? 0) + payoutIn);
+          const eligiblePayoutDay = day + clamp(payoutDelayDays + jitter, 1, 21);
+          delayedPayouts.set(eligiblePayoutDay, (delayedPayouts.get(eligiblePayoutDay) ?? 0) + payoutNet);
 
-          const payoutInToday = delayedPayouts.get(day) ?? 0;
-          const netFlow = payoutInToday - adSpend - cogsOut;
+          const isPayoutDay = day >= firstPayout && (day - firstPayout) % cadence === 0;
+          const { payoutInToday } = collectWeeklyPayout(delayedPayouts, day, isPayoutDay);
+
+          const netFlow = payoutInToday - adSpend;
           balance += netFlow;
 
           if (breakDay === null && balance < 0) {
@@ -326,17 +332,14 @@ export default function CashFlowPredictorPage() {
       monteCarlo,
     };
   }, [
-    avgOrderValue,
-    cogsMode,
-    cogsPerOrder,
-    cogsPercent,
     dailyAdBudget,
+    firstPayoutInDays,
     horizonDays,
     paymentFeePercent,
+    payoutCadenceDays,
     payoutDelayDays,
     refundPercent,
     roas,
-    mcCogsVolatility,
     mcIterations,
     mcPayoutJitterDays,
     mcRefundVolatility,
@@ -367,13 +370,13 @@ export default function CashFlowPredictorPage() {
       return "Risque modere selon Monte Carlo. Ralentis le scaling et augmente ton cushion de tresorerie.";
     }
     if (activeSimulation.breakDay && activeSimulation.breakDay <= 14) {
-      return "Risque eleve de rupture proche: baisse le budget ads de 15% a 30% ou reduis le COGS pour retrouver de l oxygene.";
+      return "Risque eleve de rupture proche: baisse le budget ads de 15% a 30% et raccourcis le delai de payout.";
     }
     if (worstBreakDay) {
-      return "Le scenario pessimiste casse le cash. Priorise un payout plus court et limite le scaling a court terme.";
+      return "Le scenario pessimiste casse le cash. Negocie un payout plus frequent et limite le scaling a court terme.";
     }
     if (activeSimulation.avgMarginPercent < netMarginPercent) {
-      return "Ta marge effective est sous la cible. Renegocie COGS, optimise frais de paiement ou augmente le panier moyen.";
+      return "Ta marge effective est sous la cible. Optimise frais de paiement, remboursements ou augmente le panier moyen.";
     }
     return "Projection saine sur les scenarios. Tu peux scaler progressivement en gardant un suivi journalier du ROAS et des remboursements.";
   }, [activeSimulation.avgMarginPercent, activeSimulation.breakDay, mcRisk, netMarginPercent, worstBreakDay]);
@@ -382,7 +385,7 @@ export default function CashFlowPredictorPage() {
     <div className="space-y-6 animate-fade-in">
       <header className="fin-card rounded-2xl p-5">
         <h1 className="text-3xl font-bold text-slate-900">Cash-flow Predictor</h1>
-        <p className="mt-2 text-sm text-slate-600">Simulation 30 a 60 jours avec decalage de payout Stripe/Shopify.</p>
+        <p className="mt-2 text-sm text-slate-600">Simulation 30 a 60 jours avec payout hebdomadaire en versement unique.</p>
       </header>
 
       <section className="grid gap-4 xl:grid-cols-12">
@@ -518,19 +521,6 @@ export default function CashFlowPredictorPage() {
                 </label>
 
                 <label className="block text-sm text-slate-600">
-                  Volatilite COGS (%): {mcCogsVolatility}%
-                  <input
-                    type="range"
-                    min={0}
-                    max={50}
-                    step={1}
-                    value={mcCogsVolatility}
-                    onChange={(event) => setMcCogsVolatility(Number(event.target.value))}
-                    className="mt-2 w-full"
-                  />
-                </label>
-
-                <label className="block text-sm text-slate-600">
                   Volatilite remboursements (%): {mcRefundVolatility}%
                   <input
                     type="range"
@@ -572,6 +562,30 @@ export default function CashFlowPredictorPage() {
           </label>
 
           <label className="block text-sm text-slate-600">
+            Frequence de payout (jours)
+            <input
+              type="number"
+              min={5}
+              max={10}
+              value={payoutCadenceDays}
+              onChange={(event) => setPayoutCadenceDays(Number(event.target.value))}
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
+            />
+          </label>
+
+          <label className="block text-sm text-slate-600">
+            Premier payout dans (jours)
+            <input
+              type="number"
+              min={1}
+              max={14}
+              value={firstPayoutInDays}
+              onChange={(event) => setFirstPayoutInDays(Number(event.target.value))}
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
+            />
+          </label>
+
+          <label className="block text-sm text-slate-600">
             Horizon simulation (jours)
             <input
               type="number"
@@ -582,56 +596,6 @@ export default function CashFlowPredictorPage() {
               className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             />
           </label>
-
-          <label className="block text-sm text-slate-600">
-            Mode COGS
-            <select
-              value={cogsMode}
-              onChange={(event) => setCogsMode(event.target.value as CogsMode)}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            >
-              <option value="percent">% du chiffre d affaires</option>
-              <option value="fixed-per-order">Montant fixe par vente</option>
-            </select>
-          </label>
-
-          {cogsMode === "percent" ? (
-            <label className="block text-sm text-slate-600">
-              COGS (%): {cogsPercent}%
-              <input
-                type="range"
-                min={5}
-                max={80}
-                step={1}
-                value={cogsPercent}
-                onChange={(event) => setCogsPercent(Number(event.target.value))}
-                className="mt-2 w-full"
-              />
-            </label>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm text-slate-600">
-                COGS / vente
-                <input
-                  type="number"
-                  min={0}
-                  value={cogsPerOrder}
-                  onChange={(event) => setCogsPerOrder(Number(event.target.value))}
-                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                />
-              </label>
-              <label className="block text-sm text-slate-600">
-                AOV moyen
-                <input
-                  type="number"
-                  min={10}
-                  value={avgOrderValue}
-                  onChange={(event) => setAvgOrderValue(Number(event.target.value))}
-                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                />
-              </label>
-            </div>
-          )}
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
             <label className="flex items-center gap-2 text-sm text-slate-700">
@@ -777,8 +741,8 @@ export default function CashFlowPredictorPage() {
               <tr>
                 <th className="px-3 py-2">Jour</th>
                 <th className="px-3 py-2">Sorties Ads</th>
-                <th className="px-3 py-2">Sorties COGS</th>
-                <th className="px-3 py-2">Frais + TVA + Remb.</th>
+                <th className="px-3 py-2">Retenues payout</th>
+                <th className="px-3 py-2">En attente payout</th>
                 <th className="px-3 py-2">Entrees Payout</th>
                 <th className="px-3 py-2">Net</th>
                 <th className="px-3 py-2">Solde</th>
@@ -789,8 +753,8 @@ export default function CashFlowPredictorPage() {
                 <tr key={row.day} className="border-t border-slate-200">
                   <td className="px-3 py-2">{row.label}</td>
                   <td className="px-3 py-2 text-red-600">-{formatCurrency(row.adSpend)}</td>
-                  <td className="px-3 py-2 text-red-600">-{formatCurrency(row.cogsOut)}</td>
                   <td className="px-3 py-2 text-amber-600">-{formatCurrency(row.payoutFeesOut + row.vatOut + row.refundsOut)}</td>
+                  <td className="px-3 py-2 text-slate-500">{formatCurrency(row.pendingPayout)}</td>
                   <td className="px-3 py-2 text-emerald-600">+{formatCurrency(row.payoutIn)}</td>
                   <td className={`px-3 py-2 ${row.netFlow >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                     {row.netFlow >= 0 ? "+" : ""}
