@@ -39,27 +39,23 @@ export default function AdsScalingPage() {
     author: "Ilias",
   });
 
-  const loadAds = async (signal?: AbortSignal) => {
-    const response = await fetch("/api/ads", { cache: "no-store", signal });
-    if (!response.ok) {
-      return;
+  const loadAds = async () => {
+    try {
+      const response = await fetch("/api/ads", { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const payload = (await response.json()) as { campaigns: Campaign[]; logs: ScalingLog[] };
+      setCampaigns(payload.campaigns);
+      setLogs(payload.logs);
+    } catch {
+      // Keep current state when network requests are interrupted.
     }
-    const payload = (await response.json()) as { campaigns: Campaign[]; logs: ScalingLog[] };
-    if (signal?.aborted) {
-      return;
-    }
-    setCampaigns(payload.campaigns);
-    setLogs(payload.logs);
   };
 
   useEffect(() => {
-    const controller = new AbortController();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadAds(controller.signal);
-
-    return () => {
-      controller.abort();
-    };
+    void loadAds();
   }, []);
 
   const createCampaign = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -109,87 +105,87 @@ export default function AdsScalingPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <header>
-        <h1 className="text-2xl font-semibold text-white sm:text-3xl">Ads & Scaling Manager</h1>
-        <p className="mt-2 text-sm text-slate-400">CRUD campagnes + journal de decisions daté.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Ads & Scaling Manager</h1>
+        <p className="mt-2 text-base text-slate-600">Interactive campaign cockpit with cleaner analytics workflow.</p>
       </header>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <form onSubmit={createCampaign} className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <h2 className="text-base font-medium text-white">Nouvelle campagne</h2>
+        <form onSubmit={createCampaign} className="fin-panel p-5">
+          <h2 className="text-base font-semibold text-slate-900">New Campaign</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <select value={actorUserId} onChange={(event) => setActorUserId(event.target.value)} className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 sm:col-span-2">
+            <select value={actorUserId} onChange={(event) => setActorUserId(event.target.value)} className="fin-input sm:col-span-2">
               {TEAM_MEMBERS.map((member) => (
                 <option key={member.id} value={member.id}>{member.label}</option>
               ))}
             </select>
-            <select value={campaignForm.platform} onChange={(event) => setCampaignForm((prev) => ({ ...prev, platform: event.target.value as "Meta" | "TikTok" }))} className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2">
+            <select value={campaignForm.platform} onChange={(event) => setCampaignForm((prev) => ({ ...prev, platform: event.target.value as "Meta" | "TikTok" }))} className="fin-input">
               <option value="Meta">Meta</option>
               <option value="TikTok">TikTok</option>
             </select>
-            <select value={campaignForm.status} onChange={(event) => setCampaignForm((prev) => ({ ...prev, status: event.target.value as "active" | "testing" | "paused" }))} className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2">
+            <select value={campaignForm.status} onChange={(event) => setCampaignForm((prev) => ({ ...prev, status: event.target.value as "active" | "testing" | "paused" }))} className="fin-input">
               <option value="active">active</option>
               <option value="testing">testing</option>
               <option value="paused">paused</option>
             </select>
-            <input value={campaignForm.name} onChange={(event) => setCampaignForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Nom campagne" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 sm:col-span-2" />
-            <input type="number" step="0.01" value={campaignForm.budget} onChange={(event) => setCampaignForm((prev) => ({ ...prev, budget: Number(event.target.value) }))} placeholder="Budget" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2" />
-            <input type="number" step="0.01" value={campaignForm.roas} onChange={(event) => setCampaignForm((prev) => ({ ...prev, roas: Number(event.target.value) }))} placeholder="ROAS" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2" />
-            <button className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-200 hover:bg-cyan-500/30 sm:col-span-2">Ajouter campagne</button>
+            <input value={campaignForm.name} onChange={(event) => setCampaignForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Campaign name" className="fin-input sm:col-span-2" />
+            <input type="number" step="0.01" value={campaignForm.budget} onChange={(event) => setCampaignForm((prev) => ({ ...prev, budget: Number(event.target.value) }))} placeholder="Budget" className="fin-input" />
+            <input type="number" step="0.01" value={campaignForm.roas} onChange={(event) => setCampaignForm((prev) => ({ ...prev, roas: Number(event.target.value) }))} placeholder="ROAS" className="fin-input" />
+            <button className="fin-btn-primary px-4 py-2 text-sm sm:col-span-2 interactive-pulse">Add Campaign</button>
           </div>
         </form>
 
-        <form onSubmit={createLog} className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <h2 className="text-base font-medium text-white">Nouveau log decision</h2>
+        <form onSubmit={createLog} className="fin-panel p-5">
+          <h2 className="text-base font-semibold text-slate-900">New Decision Log</h2>
           <div className="mt-3 grid gap-3">
-            <select value={logForm.campaignId} onChange={(event) => setLogForm((prev) => ({ ...prev, campaignId: event.target.value }))} className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2">
-              <option value="">Selectionner campagne</option>
+            <select value={logForm.campaignId} onChange={(event) => setLogForm((prev) => ({ ...prev, campaignId: event.target.value }))} className="fin-input">
+              <option value="">Select campaign</option>
               {campaigns.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.name}</option>)}
             </select>
-            <select value={logForm.decision} onChange={(event) => setLogForm((prev) => ({ ...prev, decision: event.target.value as "Increase Budget" | "Cut" | "Test New Angle" }))} className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2">
+            <select value={logForm.decision} onChange={(event) => setLogForm((prev) => ({ ...prev, decision: event.target.value as "Increase Budget" | "Cut" | "Test New Angle" }))} className="fin-input">
               <option value="Increase Budget">Increase Budget</option>
               <option value="Cut">Cut</option>
               <option value="Test New Angle">Test New Angle</option>
             </select>
-            <input value={logForm.author} onChange={(event) => setLogForm((prev) => ({ ...prev, author: event.target.value }))} placeholder="Auteur" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2" />
-            <textarea value={logForm.note} onChange={(event) => setLogForm((prev) => ({ ...prev, note: event.target.value }))} placeholder="Note decision" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2" />
-            <button className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-500/30">Ajouter log</button>
+            <input value={logForm.author} onChange={(event) => setLogForm((prev) => ({ ...prev, author: event.target.value }))} placeholder="Author" className="fin-input" />
+            <textarea value={logForm.note} onChange={(event) => setLogForm((prev) => ({ ...prev, note: event.target.value }))} placeholder="Decision notes" className="fin-input min-h-[88px]" />
+            <button className="fin-btn-soft px-4 py-2 text-sm">Add Log</button>
           </div>
         </form>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
         {campaigns.map((campaign) => (
-          <article key={campaign.id} className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+          <article key={campaign.id} className="fin-panel p-4">
             <p className="text-xs uppercase tracking-wide text-slate-500">{campaign.platform}</p>
-            <input className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-base font-medium text-white" value={campaign.name} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, name: event.target.value } : item))} />
-            <div className="mt-3 grid grid-cols-3 gap-2 text-sm text-slate-300">
-              <input type="number" step="0.01" className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1" value={campaign.budget} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, budget: Number(event.target.value) } : item))} />
-              <input type="number" step="0.01" className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1" value={campaign.roas} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, roas: Number(event.target.value) } : item))} />
-              <select className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1" value={campaign.status} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, status: event.target.value as "active" | "testing" | "paused" } : item))}>
+            <input className="fin-input mt-1 text-base font-semibold" value={campaign.name} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, name: event.target.value } : item))} />
+            <div className="mt-3 grid grid-cols-3 gap-2 text-sm text-slate-700">
+              <input type="number" step="0.01" className="fin-input px-2 py-1" value={campaign.budget} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, budget: Number(event.target.value) } : item))} />
+              <input type="number" step="0.01" className="fin-input px-2 py-1" value={campaign.roas} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, roas: Number(event.target.value) } : item))} />
+              <select className="fin-input px-2 py-1" value={campaign.status} onChange={(event) => setCampaigns((prev) => prev.map((item) => item.id === campaign.id ? { ...item, status: event.target.value as "active" | "testing" | "paused" } : item))}>
                 <option value="active">active</option>
                 <option value="testing">testing</option>
                 <option value="paused">paused</option>
               </select>
             </div>
             <div className="mt-3 flex gap-2">
-              <button type="button" onClick={() => void updateCampaign(campaign)} className="rounded-md border border-cyan-400/30 px-2 py-1 text-xs text-cyan-200">Enregistrer</button>
-              <button type="button" onClick={() => void deleteCampaign(campaign.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-xs text-rose-200">Supprimer</button>
+              <button type="button" onClick={() => void updateCampaign(campaign)} className="fin-btn-soft px-2.5 py-1 text-xs">Save</button>
+              <button type="button" onClick={() => void deleteCampaign(campaign.id)} className="fin-btn-danger px-2.5 py-1 text-xs">Delete</button>
             </div>
           </article>
         ))}
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-        <h2 className="text-base font-medium text-white">Historique des decisions</h2>
+      <section className="fin-panel space-y-3 p-4">
+        <h2 className="text-base font-semibold text-slate-900">Decision History</h2>
         {logs.map((log) => (
-          <article key={log.id} className="rounded-xl border border-white/10 bg-slate-900/70 p-3 text-sm text-slate-300">
-            <p className="font-medium text-white">{log.decision}</p>
+          <article key={log.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+            <p className="font-semibold text-slate-900">{log.decision}</p>
             <p className="mt-1">{log.note}</p>
             <p className="mt-2 text-xs text-slate-500">
               {new Date(log.created_at).toLocaleString("fr-FR")} - {log.author}
             </p>
-            <button type="button" onClick={() => void deleteLog(log.id)} className="mt-2 rounded-md border border-rose-400/30 px-2 py-1 text-xs text-rose-200">
-              Supprimer
+            <button type="button" onClick={() => void deleteLog(log.id)} className="fin-btn-danger mt-2 px-2 py-1 text-xs">
+              Delete
             </button>
           </article>
         ))}

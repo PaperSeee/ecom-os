@@ -279,7 +279,7 @@ export default function FinancialTrackerPage() {
           <button
             type="button"
             onClick={() => void saveStartingCapital()}
-            className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="fin-btn-primary mt-3 px-4 py-2 text-sm"
           >
             Sauvegarder capital
           </button>
@@ -312,13 +312,13 @@ export default function FinancialTrackerPage() {
               step="0.01"
               value={entryForm.amount}
               onChange={(event) => setEntryForm((prev) => ({ ...prev, amount: Number(event.target.value) }))}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="fin-input"
             />
             <input
               type="date"
               value={entryForm.date}
               onChange={(event) => setEntryForm((prev) => ({ ...prev, date: event.target.value }))}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="fin-input"
             />
             <button className="rounded-lg bg-green-100 px-4 py-2 text-sm text-green-700 hover:bg-green-200">
               Add Transaction
@@ -342,7 +342,7 @@ export default function FinancialTrackerPage() {
               step="0.01"
               value={recurringForm.amount}
               onChange={(event) => setRecurringForm((prev) => ({ ...prev, amount: Number(event.target.value) }))}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="fin-input"
             />
             <select
               value={recurringForm.costType}
@@ -370,7 +370,7 @@ export default function FinancialTrackerPage() {
               type="date"
               value={recurringForm.nextChargeDate}
               onChange={(event) => setRecurringForm((prev) => ({ ...prev, nextChargeDate: event.target.value }))}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="fin-input"
             />
             <button className="rounded-lg bg-blue-100 px-4 py-2 text-sm text-blue-700 hover:bg-blue-200">
               Add Recurring

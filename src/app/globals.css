@@ -56,11 +56,111 @@ h6 {
   animation: fadeIn 360ms ease-out;
 }
 
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
 .fin-card {
   border: 1px solid var(--stroke);
   background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.12);
   backdrop-filter: blur(8px);
+}
+
+.fin-panel {
+  border: 1px solid var(--stroke);
+  background: linear-gradient(140deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 14px 30px rgba(15, 23, 42, 0.08);
+  border-radius: 1rem;
+  animation: riseIn 360ms ease-out;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.fin-panel:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.28);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08), 0 18px 34px rgba(15, 23, 42, 0.12);
+}
+
+.fin-input {
+  width: 100%;
+  border-radius: 0.65rem;
+  border: 1px solid #dbe3f0;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.55rem 0.75rem;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.fin-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.22);
+}
+
+.fin-btn-primary {
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-weight: 600;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.fin-btn-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.fin-btn-soft {
+  border-radius: 0.65rem;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.fin-btn-soft:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.fin-btn-danger {
+  border-radius: 0.65rem;
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+  transition: background-color 160ms ease;
+}
+
+.fin-btn-danger:hover {
+  background: #ffe4e6;
+}
+
+.fin-pill {
+  border-radius: 999px;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .fin-chip {
@@ -78,4 +178,8 @@ h6 {
 
 .fin-text-muted {
   color: #6b7280;
+}
+
+.interactive-pulse {
+  animation: pulseGlow 2.2s infinite;
 }

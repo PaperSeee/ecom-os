@@ -15,10 +15,10 @@ export const Stepper = ({ steps, currentStep }: StepperProps) => {
             key={step}
             className={`rounded-xl border px-3 py-3 text-sm transition-colors ${
               isDone
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                 : isCurrent
-                  ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
-                  : "border-white/10 bg-slate-900/80 text-slate-400"
+                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  : "border-slate-200 bg-white text-slate-500"
             }`}
           >
             <span className="text-xs uppercase tracking-wide opacity-70">Etape {index + 1}</span>

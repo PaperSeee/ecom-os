@@ -85,19 +85,19 @@ export default function ProductLabPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <header>
-        <h1 className="text-2xl font-semibold text-white sm:text-3xl">Product Lab</h1>
-        <p className="mt-2 text-sm text-slate-400">Simulateur de profitabilite unitaire et suivi des SKU.</p>
+        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Product Lab</h1>
+        <p className="mt-2 text-base text-slate-600">Unit economics simulator with instant readiness scoring.</p>
       </header>
 
       <section className="grid gap-4 xl:grid-cols-3">
-        <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-white/10 bg-slate-950/70 p-4 xl:col-span-2">
+        <form onSubmit={onSubmit} className="fin-panel space-y-4 p-4 xl:col-span-2">
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm text-slate-300 sm:col-span-2">
+            <label className="text-sm text-slate-700 sm:col-span-2">
               Auteur de la modif
               <select
                 value={actorUserId}
                 onChange={(event) => setActorUserId(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none ring-cyan-400 focus:ring"
+                className="fin-input mt-1"
               >
                 {TEAM_MEMBERS.map((member) => (
                   <option key={member.id} value={member.id}>
@@ -106,17 +106,17 @@ export default function ProductLabPage() {
                 ))}
               </select>
             </label>
-            <label className="text-sm text-slate-300">
+            <label className="text-sm text-slate-700">
               Produit
               <input
                 required
                 value={form.name}
                 onChange={(event) => onFieldChange("name", event.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none ring-cyan-400 focus:ring"
+                className="fin-input mt-1"
                 placeholder="Ex: Correcteur posture"
               />
             </label>
-            <label className="text-sm text-slate-300">
+            <label className="text-sm text-slate-700">
               Prix de vente (EUR)
               <input
                 type="number"
@@ -124,10 +124,10 @@ export default function ProductLabPage() {
                 step="0.01"
                 value={form.price}
                 onChange={(event) => onFieldChange("price", event.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none ring-cyan-400 focus:ring"
+                className="fin-input mt-1"
               />
             </label>
-            <label className="text-sm text-slate-300">
+            <label className="text-sm text-slate-700">
               Cout produit (EUR)
               <input
                 type="number"
@@ -135,10 +135,10 @@ export default function ProductLabPage() {
                 step="0.01"
                 value={form.productCost}
                 onChange={(event) => onFieldChange("productCost", event.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none ring-cyan-400 focus:ring"
+                className="fin-input mt-1"
               />
             </label>
-            <label className="text-sm text-slate-300">
+            <label className="text-sm text-slate-700">
               Cout livraison (EUR)
               <input
                 type="number"
@@ -146,10 +146,10 @@ export default function ProductLabPage() {
                 step="0.01"
                 value={form.shippingCost}
                 onChange={(event) => onFieldChange("shippingCost", event.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none ring-cyan-400 focus:ring"
+                className="fin-input mt-1"
               />
             </label>
-            <label className="text-sm text-slate-300 sm:col-span-2">
+            <label className="text-sm text-slate-700 sm:col-span-2">
               CPA estime (EUR)
               <input
                 type="number"
@@ -157,26 +157,26 @@ export default function ProductLabPage() {
                 step="0.01"
                 value={form.cpaEstimated}
                 onChange={(event) => onFieldChange("cpaEstimated", event.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none ring-cyan-400 focus:ring"
+                className="fin-input mt-1"
               />
             </label>
           </div>
 
           <button
             type="submit"
-            className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
+            className="fin-btn-primary px-4 py-2 text-sm"
           >
             Ajouter au Product Lab
           </button>
         </form>
 
-        <aside className="space-y-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <h2 className="text-base font-medium text-white">Resultats instantanes</h2>
-          <p className="text-sm text-slate-400">Stripe: 2.9% + 0.30 EUR | Shopify: 2%</p>
+        <aside className="fin-panel space-y-3 p-4">
+          <h2 className="text-base font-semibold text-slate-900">Resultats instantanes</h2>
+          <p className="text-sm text-slate-600">Stripe: 2.9% + 0.30 EUR | Shopify: 2%</p>
           <div className="space-y-2 text-sm">
-            <p className="flex justify-between text-slate-300"><span>Profit unitaire</span><strong>{formatCurrency(preview.unitProfit)}</strong></p>
-            <p className="flex justify-between text-slate-300"><span>Marge nette</span><strong>{formatPercent(preview.netMarginPercent)}</strong></p>
-            <p className="flex justify-between text-slate-300">
+            <p className="flex justify-between text-slate-700"><span>Profit unitaire</span><strong>{formatCurrency(preview.unitProfit)}</strong></p>
+            <p className="flex justify-between text-slate-700"><span>Marge nette</span><strong>{formatPercent(preview.netMarginPercent)}</strong></p>
+            <p className="flex justify-between text-slate-700">
               <span>ROAS break-even</span>
               <strong>{Number.isFinite(preview.breakEvenRoas) ? preview.breakEvenRoas.toFixed(2) : "N/A"}</strong>
             </p>
@@ -185,10 +185,10 @@ export default function ProductLabPage() {
         </aside>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/70">
+      <section className="fin-panel overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-900/80 text-left text-xs uppercase tracking-wide text-slate-400">
+            <thead className="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3">Produit</th>
                 <th className="px-4 py-3">Prix</th>
@@ -211,10 +211,10 @@ export default function ProductLabPage() {
                   const metrics = calculateProductMetrics(product);
 
                   return (
-                    <tr key={product.id} className="border-t border-white/5 text-slate-200">
+                    <tr key={product.id} className="border-t border-slate-200 text-slate-700">
                       <td className="px-4 py-3">{product.name}</td>
                       <td className="px-4 py-3">{formatCurrency(product.price)}</td>
-                      <td className={`px-4 py-3 ${metrics.unitProfit >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                      <td className={`px-4 py-3 ${metrics.unitProfit >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                         {formatCurrency(metrics.unitProfit)}
                       </td>
                       <td className="px-4 py-3">{formatPercent(metrics.netMarginPercent)}</td>
@@ -230,7 +230,7 @@ export default function ProductLabPage() {
                         <button
                           type="button"
                           onClick={() => removeProduct(product.id)}
-                          className="inline-flex items-center gap-1 rounded-md border border-rose-500/30 px-2.5 py-1.5 text-xs text-rose-200 hover:bg-rose-500/10"
+                          className="fin-btn-danger inline-flex items-center gap-1 px-2.5 py-1.5 text-xs"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           Supprimer

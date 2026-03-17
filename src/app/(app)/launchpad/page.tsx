@@ -84,12 +84,12 @@ export default function LaunchpadPage() {
     <div className="space-y-6 animate-fade-in">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-white sm:text-3xl">LaunchPad Checklist</h1>
-          <p className="mt-1 text-sm text-slate-400">Checklist interactive pre-launch avec logique bloqueur.</p>
+          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">LaunchPad Checklist</h1>
+          <p className="mt-1 text-base text-slate-600">Interactive pre-launch execution flow with critical safeguards.</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-slate-900/80 p-3 text-sm text-slate-300">
+        <div className="fin-panel p-3 text-sm text-slate-700">
           <p className="text-xs uppercase tracking-wide text-slate-500">Statut</p>
-          <p className={`mt-1 font-semibold ${canLaunch ? "text-emerald-300" : "text-rose-300"}`}>
+          <p className={`mt-1 font-semibold ${canLaunch ? "text-emerald-700" : "text-rose-700"}`}>
             {canLaunch ? "Ready to Launch" : "Ready to Launch bloque"}
           </p>
         </div>
@@ -110,16 +110,16 @@ export default function LaunchpadPage() {
       )}
 
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="md:col-span-2 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+        <div className="fin-panel p-4 md:col-span-2">
           <ProgressBar value={progress} label="Progression globale lancement" />
         </div>
-        <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+        <div className="fin-panel p-4">
           <label htmlFor="actor" className="text-xs uppercase tracking-wide text-slate-400">
             Auteur modif
           </label>
           <select
             id="actor"
-            className="mt-2 mb-3 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none ring-cyan-400 focus:ring"
+            className="fin-input mb-3 mt-2"
             value={actorUserId}
             onChange={(event) => setActorUserId(event.target.value)}
           >
@@ -135,7 +135,7 @@ export default function LaunchpadPage() {
           </label>
           <select
             id="validator"
-            className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none ring-cyan-400 focus:ring"
+            className="fin-input mt-2"
             value={validator}
             onChange={(event) => setValidator(event.target.value as Associate)}
           >
@@ -152,8 +152,8 @@ export default function LaunchpadPage() {
         <button
           type="button"
           onClick={() => setActiveCategory("All")}
-          className={`rounded-full px-3 py-1.5 text-xs ${
-            activeCategory === "All" ? "bg-cyan-500/20 text-cyan-200" : "bg-slate-900 text-slate-300"
+          className={`rounded-full border px-3 py-1.5 text-xs transition ${
+            activeCategory === "All" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"
           }`}
         >
           All
@@ -163,8 +163,8 @@ export default function LaunchpadPage() {
             key={category}
             type="button"
             onClick={() => setActiveCategory(category)}
-            className={`rounded-full px-3 py-1.5 text-xs ${
-              activeCategory === category ? "bg-cyan-500/20 text-cyan-200" : "bg-slate-900 text-slate-300"
+            className={`rounded-full border px-3 py-1.5 text-xs transition ${
+              activeCategory === category ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"
             }`}
           >
             {category}
@@ -176,12 +176,12 @@ export default function LaunchpadPage() {
         {filteredTasks.map((task) => (
           <article
             key={task.id}
-            className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 transition hover:border-white/20"
+            className="fin-panel p-4"
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-400">{task.category}</p>
-                <h2 className="text-base font-medium text-white">{task.title}</h2>
+                <h2 className="text-base font-semibold text-slate-900">{task.title}</h2>
                 <p className="mt-1 text-xs text-slate-500">
                   {task.validatedAt
                     ? `Valide par ${task.validatedBy} le ${new Date(task.validatedAt).toLocaleString("fr-FR")}`
@@ -198,7 +198,7 @@ export default function LaunchpadPage() {
                   aria-label={`Assignee for ${task.title}`}
                   value={task.assignee}
                   onChange={(event) => void patchTask(task.id, "assign", event.target.value)}
-                  className="rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-200"
+                  className="fin-input px-2.5 py-1.5 text-xs"
                 >
                   {associates.map((associate) => (
                     <option key={associate} value={associate}>
@@ -210,10 +210,10 @@ export default function LaunchpadPage() {
                 <button
                   type="button"
                   onClick={() => void patchTask(task.id, "toggle-critical")}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs ${
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs transition ${
                     task.isCritical
-                      ? "border-rose-400/50 bg-rose-500/10 text-rose-200"
-                      : "border-white/10 bg-slate-900 text-slate-300"
+                      ? "border-rose-200 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-600"
                   }`}
                 >
                   <ShieldAlert className="h-3.5 w-3.5" />
@@ -223,10 +223,10 @@ export default function LaunchpadPage() {
                 <button
                   type="button"
                   onClick={() => void patchTask(task.id, "toggle-validation")}
-                  className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium ${
+                  className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                     task.validatedAt
-                      ? "bg-slate-700 text-slate-200"
-                      : "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30"
+                      ? "bg-slate-200 text-slate-700"
+                      : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
                   }`}
                 >
                   <Check className="h-3.5 w-3.5" />
