@@ -215,49 +215,49 @@ export default function FinancialTrackerPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <header>
-        <h1 className="text-2xl font-semibold text-white sm:text-3xl">Financial Tracker</h1>
-        <p className="mt-2 text-sm text-slate-400">Tresorerie live, recurring costs et projections reelles mensuelles.</p>
+        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Financial Tracker</h1>
+        <p className="mt-2 text-base text-slate-600">Real-time treasury, recurring costs & monthly projections</p>
       </header>
 
       {risk ? (
         <AlertBanner
-          title="Risque de rupture de cash"
-          description="La tresorerie projetee est sous le seuil de securite operationnel."
+          title="Cash runway risk"
+          description="Projected treasury is below operational safety threshold."
           severity="critical"
         />
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Tresorerie actuelle</p>
-          <p className="mt-2 text-xl font-semibold text-white">{formatCurrency(currentCash)}</p>
+        <article className="fin-card rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Current Treasury</p>
+          <p className="mt-2 text-xl font-semibold text-slate-900">{formatCurrency(currentCash)}</p>
         </article>
-        <article className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Depenses estimees / mois</p>
-          <p className="mt-2 text-xl font-semibold text-white">{formatCurrency(monthlyEstimatedExpenses)}</p>
+        <article className="fin-card rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Est. Expenses/Month</p>
+          <p className="mt-2 text-xl font-semibold text-slate-900">{formatCurrency(monthlyEstimatedExpenses)}</p>
         </article>
-        <article className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Projection fin de mois</p>
-          <p className={`mt-2 text-xl font-semibold ${projectedEndOfMonth >= 0 ? "text-white" : "text-rose-300"}`}>
+        <article className="fin-card rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Month-End Projection</p>
+          <p className={`mt-2 text-xl font-semibold ${projectedEndOfMonth >= 0 ? "text-green-600" : "text-red-600"}`}>
             {formatCurrency(projectedEndOfMonth)}
           </p>
         </article>
-        <article className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Projection 30j</p>
-          <p className="mt-2 text-xl font-semibold text-white">{formatCurrency(projection(currentCash, 30))}</p>
+        <article className="fin-card rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">30-Day Projection</p>
+          <p className="mt-2 text-xl font-semibold text-slate-900">{formatCurrency(projection(currentCash, 30))}</p>
         </article>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 xl:col-span-1">
-          <h2 className="text-base font-medium text-white">Capital de depart</h2>
-          <p className="mt-1 text-sm text-slate-400">Modifiable a tout moment pour refleter la tresorerie initiale.</p>
-          <label className="mt-3 block text-sm text-slate-300">
-            Auteur modif
+        <div className="fin-card rounded-2xl p-4 xl:col-span-1">
+          <h2 className="text-base font-medium text-slate-900">Starting Capital</h2>
+          <p className="mt-1 text-sm text-slate-600">Initial treasury balance - update anytime.</p>
+          <label className="mt-3 block text-sm text-slate-700">
+            Author
             <select
               value={actorUserId}
               onChange={(event) => setActorUserId(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             >
               {TEAM_MEMBERS.map((member) => (
                 <option key={member.id} value={member.id}>
@@ -266,45 +266,45 @@ export default function FinancialTrackerPage() {
               ))}
             </select>
           </label>
-          <label className="mt-3 block text-sm text-slate-300">
-            Capital initial (EUR)
+          <label className="mt-3 block text-sm text-slate-700">
+            Starting Capital (EUR)
             <input
               type="number"
               step="0.01"
               value={startingCapital}
               onChange={(event) => setStartingCapital(Number(event.target.value))}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             />
           </label>
           <button
             type="button"
             onClick={() => void saveStartingCapital()}
-            className="mt-3 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
+            className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Sauvegarder capital
           </button>
-          <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-400">
-            <div className="rounded-lg border border-white/10 bg-slate-900/70 px-2 py-2">60j: {formatCurrency(projection(currentCash, 60))}</div>
-            <div className="rounded-lg border border-white/10 bg-slate-900/70 px-2 py-2">90j: {formatCurrency(projection(currentCash, 90))}</div>
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-600">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">60d: {formatCurrency(projection(currentCash, 60))}</div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">90d: {formatCurrency(projection(currentCash, 90))}</div>
           </div>
         </div>
 
-        <form onSubmit={addEntry} className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 xl:col-span-1">
-          <h2 className="text-base font-medium text-white">Encoder revenu / depense</h2>
+        <form onSubmit={addEntry} className="fin-card rounded-2xl p-4 xl:col-span-1">
+          <h2 className="text-base font-medium text-slate-900">Add Revenue / Expense</h2>
           <div className="mt-3 grid gap-3">
             <select
               value={entryForm.type}
               onChange={(event) => setEntryForm((prev) => ({ ...prev, type: event.target.value as "inflow" | "outflow" }))}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             >
-              <option value="inflow">Revenu</option>
-              <option value="outflow">Depense</option>
+              <option value="inflow">Revenue</option>
+              <option value="outflow">Expense</option>
             </select>
             <input
               value={entryForm.label}
               onChange={(event) => setEntryForm((prev) => ({ ...prev, label: event.target.value }))}
-              placeholder="Ex: Meta Ads / CA Shopify"
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              placeholder="e.g., Meta Ads / Shopify Revenue"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             />
             <input
               type="number"
@@ -320,21 +320,21 @@ export default function FinancialTrackerPage() {
               onChange={(event) => setEntryForm((prev) => ({ ...prev, date: event.target.value }))}
               className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
             />
-            <button className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-500/30">
-              Ajouter transaction
+            <button className="rounded-lg bg-green-100 px-4 py-2 text-sm text-green-700 hover:bg-green-200">
+              Add Transaction
             </button>
           </div>
         </form>
 
-        <form onSubmit={addRecurring} className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 xl:col-span-1">
-          <h2 className="text-base font-medium text-white">Abos recurrents</h2>
-          <p className="mt-1 text-sm text-slate-400">Fixes et variables mensuels pour estimer le burn.</p>
+        <form onSubmit={addRecurring} className="fin-card rounded-2xl p-4 xl:col-span-1">
+          <h2 className="text-base font-medium text-slate-900">Recurring Costs</h2>
+          <p className="mt-1 text-sm text-slate-600">Fixed & variable monthly to estimate burn.</p>
           <div className="mt-3 grid gap-3">
             <input
               value={recurringForm.label}
               onChange={(event) => setRecurringForm((prev) => ({ ...prev, label: event.target.value }))}
-              placeholder="Ex: Shopify, Apps, SAV"
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              placeholder="e.g., Shopify, Apps, Support"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             />
             <input
               type="number"
@@ -347,9 +347,9 @@ export default function FinancialTrackerPage() {
             <select
               value={recurringForm.costType}
               onChange={(event) => setRecurringForm((prev) => ({ ...prev, costType: event.target.value as "fixed" | "variable" }))}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             >
-              <option value="fixed">Fixe</option>
+              <option value="fixed">Fixed</option>
               <option value="variable">Variable</option>
             </select>
             <select
@@ -360,11 +360,11 @@ export default function FinancialTrackerPage() {
                   cadence: event.target.value as "weekly" | "monthly" | "quarterly",
                 }))
               }
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
             >
-              <option value="weekly">Chaque semaine</option>
-              <option value="monthly">Chaque mois</option>
-              <option value="quarterly">Chaque trimestre</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
             </select>
             <input
               type="date"
@@ -372,30 +372,30 @@ export default function FinancialTrackerPage() {
               onChange={(event) => setRecurringForm((prev) => ({ ...prev, nextChargeDate: event.target.value }))}
               className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
             />
-            <button className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-200 hover:bg-cyan-500/30">
-              Ajouter recurrent
+            <button className="rounded-lg bg-blue-100 px-4 py-2 text-sm text-blue-700 hover:bg-blue-200">
+              Add Recurring
             </button>
           </div>
         </form>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <h2 className="text-base font-medium text-white">Journal entrees / sorties</h2>
+        <div className="fin-card rounded-2xl p-4">
+          <h2 className="text-base font-medium text-slate-900">Transaction Log</h2>
           <div className="mt-3 space-y-2">
-            {operationalEntries.length === 0 ? <p className="text-sm text-slate-400">Aucune transaction pour l&apos;instant.</p> : null}
+            {operationalEntries.length === 0 ? <p className="text-sm text-slate-500">No transactions yet.</p> : null}
             {operationalEntries.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 text-sm">
+              <div key={entry.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                 <div>
-                  <p className="text-slate-200">{entry.label}</p>
+                  <p className="text-slate-900">{entry.label}</p>
                   <p className="text-xs text-slate-500">{entry.date} - {getTeamMemberLabel(entry.userId)}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <p className={entry.type === "inflow" ? "text-emerald-300" : "text-rose-300"}>
+                  <p className={entry.type === "inflow" ? "text-green-600" : "text-red-600"}>
                     {entry.type === "inflow" ? "+" : "-"}
                     {formatCurrency(entry.amount)}
                   </p>
-                  <button type="button" onClick={() => void removeEntry(entry.id)} className="text-rose-300 hover:text-rose-200" aria-label="Delete entry">
+                  <button type="button" onClick={() => void removeEntry(entry.id)} className="text-red-600 hover:text-red-700" aria-label="Delete entry">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -404,21 +404,21 @@ export default function FinancialTrackerPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-          <h2 className="text-base font-medium text-white">Recurrents mensuels (fixe + variable)</h2>
+        <div className="fin-card rounded-2xl p-4">
+          <h2 className="text-base font-medium text-slate-900">Monthly Recurring (Fixed + Variable)</h2>
           <div className="mt-3 space-y-2">
-            {recurring.length === 0 ? <p className="text-sm text-slate-400">Aucun cout recurrent configure.</p> : null}
+            {recurring.length === 0 ? <p className="text-sm text-slate-500">No recurring costs configured.</p> : null}
             {recurring.map((item) => (
-              <div key={item.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 text-sm">
+              <div key={item.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                 <div>
-                  <p className="text-slate-200">{item.label}</p>
+                  <p className="text-slate-900">{item.label}</p>
                   <p className="text-xs text-slate-500">
-                    {item.costType === "fixed" ? "Fixe" : "Variable"} - {item.cadence} - Prochain: {item.nextChargeDate ?? "N/A"} - {getTeamMemberLabel(item.userId)}
+                    {item.costType === "fixed" ? "Fixed" : "Variable"} • {item.cadence} • Next: {item.nextChargeDate ?? "N/A"} • {getTeamMemberLabel(item.userId)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <p className="text-amber-300">{formatCurrency(monthlyEquivalent(item))}/mois</p>
-                  <button type="button" onClick={() => void removeRecurring(item.id)} className="text-rose-300 hover:text-rose-200" aria-label="Delete recurring">
+                  <p className="text-amber-600">{formatCurrency(monthlyEquivalent(item))}/mo</p>
+                  <button type="button" onClick={() => void removeRecurring(item.id)} className="text-red-600 hover:text-red-700" aria-label="Delete recurring">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -426,11 +426,11 @@ export default function FinancialTrackerPage() {
             ))}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 text-slate-300">
-              Fixe/mois: <strong>{formatCurrency(monthlyFixed)}</strong>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
+              Fixed/mo: <strong>{formatCurrency(monthlyFixed)}</strong>
             </div>
-            <div className="rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 text-slate-300">
-              Variable/mois: <strong>{formatCurrency(monthlyVariable)}</strong>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
+              Variable/mo: <strong>{formatCurrency(monthlyVariable)}</strong>
             </div>
           </div>
         </div>

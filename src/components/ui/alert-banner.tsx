@@ -8,15 +8,15 @@ interface AlertBannerProps {
 
 const styles = {
   critical: {
-    wrap: "border-rose-500/40 bg-rose-500/12 text-rose-100 shadow-[0_10px_24px_rgba(244,63,94,0.16)]",
+    wrap: "border-red-200 bg-red-50 text-red-900 shadow-[0_1px_3px_rgba(239,68,68,0.1)]",
     icon: Siren,
   },
   warning: {
-    wrap: "border-amber-400/40 bg-amber-500/12 text-amber-100 shadow-[0_10px_24px_rgba(245,158,11,0.14)]",
+    wrap: "border-amber-200 bg-amber-50 text-amber-900 shadow-[0_1px_3px_rgba(251,146,60,0.1)]",
     icon: AlertTriangle,
   },
   info: {
-    wrap: "border-sky-500/40 bg-sky-500/12 text-sky-100 shadow-[0_10px_24px_rgba(14,165,233,0.16)]",
+    wrap: "border-blue-200 bg-blue-50 text-blue-900 shadow-[0_1px_3px_rgba(59,130,246,0.1)]",
     icon: Info,
   },
 };

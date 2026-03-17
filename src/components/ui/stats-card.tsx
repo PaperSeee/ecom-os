@@ -9,9 +9,9 @@ interface StatsCardProps {
 }
 
 const trendClass: Record<Trend, string> = {
-  up: "text-emerald-400",
-  down: "text-rose-400",
-  flat: "text-slate-400",
+  up: "text-green-600",
+  down: "text-red-600",
+  flat: "text-slate-500",
 };
 
 const TrendIcon = ({ trend }: { trend: Trend }) => {
@@ -29,8 +29,8 @@ const TrendIcon = ({ trend }: { trend: Trend }) => {
 export const StatsCard = ({ label, value, trend, trendValue }: StatsCardProps) => {
   return (
     <article className="fin-card rounded-2xl p-4 transition-transform duration-300 hover:-translate-y-0.5">
-      <p className="text-xs uppercase tracking-[0.15em] text-slate-400">{label}</p>
-      <p className="mt-3 text-2xl font-semibold text-white">{value}</p>
+      <p className="text-xs uppercase tracking-[0.15em] text-slate-500 font-medium">{label}</p>
+      <p className="mt-3 text-2xl font-semibold text-slate-900">{value}</p>
       <p className={`mt-2 inline-flex items-center gap-1 text-sm ${trendClass[trend]}`}>
         <TrendIcon trend={trend} />
         {trendValue}

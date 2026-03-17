@@ -1,13 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #04070d;
-  --foreground: #e6edf7;
-  --surface: #0f1624;
-  --surface-2: #0b1220;
-  --accent: #34d399;
-  --accent-2: #0ea5e9;
-  --stroke: rgba(148, 163, 184, 0.2);
+  --background: #f8f9fb;
+  --foreground: #0f1419;
+  --surface: #ffffff;
+  --surface-2: #f3f5f9;
+  --accent: #2563eb;
+  --accent-2: #06b6d4;
+  --stroke: rgba(203, 213, 225, 0.6);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --critical: #ef4444;
 }
 
 @theme inline {
@@ -23,10 +26,10 @@ body {
   font-family: var(--font-body), sans-serif;
   min-height: 100vh;
   background-image:
-    radial-gradient(1200px circle at 8% -12%, rgba(14, 165, 233, 0.22), transparent 44%),
-    radial-gradient(900px circle at 95% 0%, rgba(52, 211, 153, 0.18), transparent 36%),
-    radial-gradient(1000px circle at 45% 120%, rgba(59, 130, 246, 0.12), transparent 48%),
-    linear-gradient(180deg, #04070d 0%, #04070d 100%);
+    radial-gradient(1400px circle at 8% -8%, rgba(37, 99, 235, 0.08), transparent 50%),
+    radial-gradient(1200px circle at 98% 4%, rgba(6, 182, 212, 0.06), transparent 45%),
+    radial-gradient(1000px circle at 35% 110%, rgba(59, 130, 246, 0.05), transparent 50%),
+    linear-gradient(180deg, #f8f9fb 0%, #f8f9fb 100%);
 }
 
 h1,
@@ -55,12 +58,24 @@ h6 {
 
 .fin-card {
   border: 1px solid var(--stroke);
-  background: linear-gradient(160deg, rgba(15, 22, 36, 0.88) 0%, rgba(11, 18, 32, 0.84) 100%);
-  box-shadow: 0 14px 40px rgba(2, 6, 23, 0.45);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(8px);
 }
 
 .fin-chip {
-  border: 1px solid rgba(52, 211, 153, 0.28);
-  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.fin-text-primary {
+  color: var(--foreground);
+}
+
+.fin-text-accent {
+  color: var(--accent);
+}
+
+.fin-text-muted {
+  color: #6b7280;
 }
