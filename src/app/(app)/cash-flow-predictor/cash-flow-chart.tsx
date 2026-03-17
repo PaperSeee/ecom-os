@@ -17,6 +17,9 @@ interface CashFlowChartRow {
   pessimistic: number;
   base: number;
   aggressive: number;
+  mcP10?: number;
+  mcP50?: number;
+  mcP90?: number;
 }
 
 interface CashFlowChartProps {
@@ -24,6 +27,10 @@ interface CashFlowChartProps {
 }
 
 export default function CashFlowChart({ rows }: CashFlowChartProps) {
+  const hasMonteCarlo = rows.some((row) =>
+    typeof row.mcP10 === "number" && typeof row.mcP50 === "number" && typeof row.mcP90 === "number",
+  );
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={rows} margin={{ top: 10, right: 12, left: 12, bottom: 0 }}>
@@ -46,6 +53,13 @@ export default function CashFlowChart({ rows }: CashFlowChartProps) {
         <Line type="monotone" dataKey="pessimistic" name="Pessimiste" stroke="#f97316" strokeWidth={2.2} dot={false} />
         <Line type="monotone" dataKey="base" name="Base" stroke="#22c55e" strokeWidth={2.8} dot={false} />
         <Line type="monotone" dataKey="aggressive" name="Agressif" stroke="#38bdf8" strokeWidth={2.2} dot={false} />
+        {hasMonteCarlo ? (
+          <>
+            <Line type="monotone" dataKey="mcP10" name="MC P10" stroke="#f43f5e" strokeWidth={1.8} strokeDasharray="5 4" dot={false} />
+            <Line type="monotone" dataKey="mcP50" name="MC P50" stroke="#eab308" strokeWidth={2} strokeDasharray="5 4" dot={false} />
+            <Line type="monotone" dataKey="mcP90" name="MC P90" stroke="#818cf8" strokeWidth={1.8} strokeDasharray="5 4" dot={false} />
+          </>
+        ) : null}
       </LineChart>
     </ResponsiveContainer>
   );

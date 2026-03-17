@@ -28,6 +28,9 @@ interface ChartRow {
   pessimistic: number;
   base: number;
   aggressive: number;
+  mcP10?: number;
+  mcP50?: number;
+  mcP90?: number;
 }
 
 interface ScenarioSimulation {
@@ -47,6 +50,17 @@ interface ScenarioConfig {
   refundPercentOffset: number;
 }
 
+interface MonteCarloSummary {
+  breakProbability: number;
+  p10EndBalance: number;
+  p50EndBalance: number;
+  p90EndBalance: number;
+  medianBreakDay: number | null;
+  dailyP10: number[];
+  dailyP50: number[];
+  dailyP90: number[];
+}
+
 const CashFlowChart = dynamic(() => import("./cash-flow-chart"), {
   ssr: false,
   loading: () => (
@@ -57,6 +71,32 @@ const CashFlowChart = dynamic(() => import("./cash-flow-chart"), {
 });
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+const percentile = (values: number[], p: number): number => {
+  if (values.length === 0) {
+    return 0;
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const idx = (sorted.length - 1) * p;
+  const lower = Math.floor(idx);
+  const upper = Math.ceil(idx);
+  if (lower === upper) {
+    return sorted[lower];
+  }
+  const weight = idx - lower;
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+};
+
+const seededNoise = (seed: number): number => {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  const fractional = x - Math.floor(x);
+  return fractional * 2 - 1;
+};
+
+const applyNoise = (value: number, volatilityPercent: number, seed: number): number => {
+  const drift = seededNoise(seed) * (volatilityPercent / 100);
+  return value * (1 + drift);
+};
 
 const scenarioConfigs: Record<ScenarioKey, ScenarioConfig> = {
   pessimistic: {
@@ -103,6 +143,12 @@ export default function CashFlowPredictorPage() {
   const [vatPercent, setVatPercent] = useState<number>(20);
   const [refundPercent, setRefundPercent] = useState<number>(4);
   const [activeScenario, setActiveScenario] = useState<ScenarioKey>("base");
+  const [monteCarloEnabled, setMonteCarloEnabled] = useState<boolean>(false);
+  const [mcIterations, setMcIterations] = useState<number>(400);
+  const [mcRoasVolatility, setMcRoasVolatility] = useState<number>(18);
+  const [mcCogsVolatility, setMcCogsVolatility] = useState<number>(10);
+  const [mcRefundVolatility, setMcRefundVolatility] = useState<number>(25);
+  const [mcPayoutJitterDays, setMcPayoutJitterDays] = useState<number>(1);
 
   const simulation = useMemo(() => {
     const runScenario = (scenarioKey: ScenarioKey): ScenarioSimulation => {
@@ -197,9 +243,87 @@ export default function CashFlowPredictorPage() {
       };
     });
 
+    let monteCarlo: MonteCarloSummary | null = null;
+
+    if (monteCarloEnabled) {
+      const iterations = clamp(Math.floor(mcIterations), 100, 3000);
+      const balancesByDay: number[][] = Array.from({ length: horizonDays }, () => []);
+      const endBalances: number[] = [];
+      const breakDays: number[] = [];
+
+      for (let run = 0; run < iterations; run += 1) {
+        const delayedPayouts = new Map<number, number>();
+        let balance = startingCapital;
+        let breakDay: number | null = null;
+
+        for (let day = 1; day <= horizonDays; day += 1) {
+          const scalingFactor =
+            scalingEnabled && scalingEveryDays > 0
+              ? Math.floor((day - 1) / scalingEveryDays)
+              : 0;
+
+          const adSpend = dailyAdBudget * (1 + (scalingIncreasePercent / 100)) ** scalingFactor;
+          const dayRoas = clamp(applyNoise(roas, mcRoasVolatility, run * 1000 + day * 7 + 11), 0.2, 8);
+          const grossRevenue = adSpend * dayRoas;
+
+          const cogsOut =
+            cogsMode === "percent"
+              ? grossRevenue * (clamp(applyNoise(cogsPercent, mcCogsVolatility, run * 1000 + day * 13 + 17), 0, 95) / 100)
+              : (grossRevenue / Math.max(10, avgOrderValue)) * Math.max(0, applyNoise(cogsPerOrder, mcCogsVolatility, run * 1000 + day * 19 + 23));
+
+          const payoutFeesOut = grossRevenue * (clamp(paymentFeePercent, 0, 12) / 100);
+          const vatOut = grossRevenue * (clamp(vatPercent, 0, 30) / 100);
+          const refundRate = clamp(applyNoise(refundPercent, mcRefundVolatility, run * 1000 + day * 29 + 31), 0, 40);
+          const refundsOut = grossRevenue * (refundRate / 100);
+          const payoutIn = Math.max(0, grossRevenue - payoutFeesOut - vatOut - refundsOut);
+
+          const jitter =
+            mcPayoutJitterDays > 0
+              ? Math.round(seededNoise(run * 1000 + day * 37 + 41) * mcPayoutJitterDays)
+              : 0;
+          const payoutDay = day + clamp(payoutDelayDays + jitter, 1, 21);
+          delayedPayouts.set(payoutDay, (delayedPayouts.get(payoutDay) ?? 0) + payoutIn);
+
+          const payoutInToday = delayedPayouts.get(day) ?? 0;
+          const netFlow = payoutInToday - adSpend - cogsOut;
+          balance += netFlow;
+
+          if (breakDay === null && balance < 0) {
+            breakDay = day;
+          }
+
+          balancesByDay[day - 1].push(balance);
+        }
+
+        endBalances.push(balance);
+        if (breakDay !== null) {
+          breakDays.push(breakDay);
+        }
+      }
+
+      monteCarlo = {
+        breakProbability: (breakDays.length / iterations) * 100,
+        p10EndBalance: percentile(endBalances, 0.1),
+        p50EndBalance: percentile(endBalances, 0.5),
+        p90EndBalance: percentile(endBalances, 0.9),
+        medianBreakDay: breakDays.length > 0 ? Math.round(percentile(breakDays, 0.5)) : null,
+        dailyP10: balancesByDay.map((series) => percentile(series, 0.1)),
+        dailyP50: balancesByDay.map((series) => percentile(series, 0.5)),
+        dailyP90: balancesByDay.map((series) => percentile(series, 0.9)),
+      };
+    }
+
+    const mergedChartRows = chartRows.map((row, idx) => ({
+      ...row,
+      mcP10: monteCarlo?.dailyP10[idx],
+      mcP50: monteCarlo?.dailyP50[idx],
+      mcP90: monteCarlo?.dailyP90[idx],
+    }));
+
     return {
       byScenario,
-      chartRows,
+      chartRows: mergedChartRows,
+      monteCarlo,
     };
   }, [
     avgOrderValue,
@@ -212,6 +336,12 @@ export default function CashFlowPredictorPage() {
     payoutDelayDays,
     refundPercent,
     roas,
+    mcCogsVolatility,
+    mcIterations,
+    mcPayoutJitterDays,
+    mcRefundVolatility,
+    mcRoasVolatility,
+    monteCarloEnabled,
     scalingEnabled,
     scalingEveryDays,
     scalingIncreasePercent,
@@ -221,12 +351,21 @@ export default function CashFlowPredictorPage() {
 
   const activeSimulation = simulation.byScenario[activeScenario];
   const worstBreakDay = simulation.byScenario.pessimistic.breakDay;
+  const mcRisk = simulation.monteCarlo?.breakProbability ?? null;
 
-  const survivalLabel = activeSimulation.breakDay
-    ? `ALERTE : RUPTURE DE CASH A J+${activeSimulation.breakDay}`
-    : "SURVIE : ILLIMITEE";
+  const survivalLabel = mcRisk !== null
+    ? `RISQUE RUPTURE (MC): ${mcRisk.toFixed(1)}%`
+    : activeSimulation.breakDay
+      ? `ALERTE : RUPTURE DE CASH A J+${activeSimulation.breakDay}`
+      : "SURVIE : ILLIMITEE";
 
   const recommendation = useMemo(() => {
+    if (mcRisk !== null && mcRisk >= 45) {
+      return "Monte Carlo detecte un risque critique. Coupe le budget ads, baisse le delai de payout et reduis les remboursements.";
+    }
+    if (mcRisk !== null && mcRisk >= 20) {
+      return "Risque modere selon Monte Carlo. Ralentis le scaling et augmente ton cushion de tresorerie.";
+    }
     if (activeSimulation.breakDay && activeSimulation.breakDay <= 14) {
       return "Risque eleve de rupture proche: baisse le budget ads de 15% a 30% ou reduis le COGS pour retrouver de l oxygene.";
     }
@@ -237,7 +376,7 @@ export default function CashFlowPredictorPage() {
       return "Ta marge effective est sous la cible. Renegocie COGS, optimise frais de paiement ou augmente le panier moyen.";
     }
     return "Projection saine sur les scenarios. Tu peux scaler progressivement en gardant un suivi journalier du ROAS et des remboursements.";
-  }, [activeSimulation.avgMarginPercent, activeSimulation.breakDay, netMarginPercent, worstBreakDay]);
+  }, [activeSimulation.avgMarginPercent, activeSimulation.breakDay, mcRisk, netMarginPercent, worstBreakDay]);
 
   return (
     <div className="space-y-6">
@@ -339,6 +478,86 @@ export default function CashFlowPredictorPage() {
               className="mt-2 w-full"
             />
           </label>
+
+          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3">
+            <label className="flex items-center gap-2 text-sm text-zinc-200">
+              <input
+                type="checkbox"
+                checked={monteCarloEnabled}
+                onChange={(event) => setMonteCarloEnabled(event.target.checked)}
+              />
+              Mode Monte Carlo
+            </label>
+
+            {monteCarloEnabled ? (
+              <div className="mt-3 space-y-3">
+                <label className="block text-sm text-zinc-300">
+                  Iterations
+                  <input
+                    type="number"
+                    min={100}
+                    max={3000}
+                    step={100}
+                    value={mcIterations}
+                    onChange={(event) => setMcIterations(Number(event.target.value))}
+                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
+                  />
+                </label>
+
+                <label className="block text-sm text-zinc-300">
+                  Volatilite ROAS (%): {mcRoasVolatility}%
+                  <input
+                    type="range"
+                    min={0}
+                    max={60}
+                    step={1}
+                    value={mcRoasVolatility}
+                    onChange={(event) => setMcRoasVolatility(Number(event.target.value))}
+                    className="mt-2 w-full"
+                  />
+                </label>
+
+                <label className="block text-sm text-zinc-300">
+                  Volatilite COGS (%): {mcCogsVolatility}%
+                  <input
+                    type="range"
+                    min={0}
+                    max={50}
+                    step={1}
+                    value={mcCogsVolatility}
+                    onChange={(event) => setMcCogsVolatility(Number(event.target.value))}
+                    className="mt-2 w-full"
+                  />
+                </label>
+
+                <label className="block text-sm text-zinc-300">
+                  Volatilite remboursements (%): {mcRefundVolatility}%
+                  <input
+                    type="range"
+                    min={0}
+                    max={80}
+                    step={1}
+                    value={mcRefundVolatility}
+                    onChange={(event) => setMcRefundVolatility(Number(event.target.value))}
+                    className="mt-2 w-full"
+                  />
+                </label>
+
+                <label className="block text-sm text-zinc-300">
+                  Jitter payout (+/- jours): {mcPayoutJitterDays}
+                  <input
+                    type="range"
+                    min={0}
+                    max={5}
+                    step={1}
+                    value={mcPayoutJitterDays}
+                    onChange={(event) => setMcPayoutJitterDays(Number(event.target.value))}
+                    className="mt-2 w-full"
+                  />
+                </label>
+              </div>
+            ) : null}
+          </div>
 
           <label className="block text-sm text-zinc-300">
             Delai de payout (jours)
@@ -472,6 +691,27 @@ export default function CashFlowPredictorPage() {
               </p>
             </article>
           </div>
+
+          {simulation.monteCarlo ? (
+            <div className="grid gap-4 md:grid-cols-3">
+              <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
+                <p className="text-xs uppercase tracking-wide text-zinc-400">Risque de rupture (MC)</p>
+                <p className={`mt-2 text-2xl font-semibold ${simulation.monteCarlo.breakProbability >= 30 ? "text-red-400" : "text-emerald-400"}`}>
+                  {simulation.monteCarlo.breakProbability.toFixed(1)}%
+                </p>
+              </article>
+              <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
+                <p className="text-xs uppercase tracking-wide text-zinc-400">P50 solde final</p>
+                <p className="mt-2 text-2xl font-semibold text-zinc-100">{formatCurrency(simulation.monteCarlo.p50EndBalance)}</p>
+              </article>
+              <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-zinc-100">
+                <p className="text-xs uppercase tracking-wide text-zinc-400">Median break day</p>
+                <p className="mt-2 text-2xl font-semibold text-zinc-100">
+                  {simulation.monteCarlo.medianBreakDay ? `J+${simulation.monteCarlo.medianBreakDay}` : "Aucune"}
+                </p>
+              </article>
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap gap-2">
             <button
