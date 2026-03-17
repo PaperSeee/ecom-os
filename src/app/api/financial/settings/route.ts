@@ -14,6 +14,19 @@ export async function GET() {
     .maybeSingle();
 
   if (error) {
+    const fallback = await supabaseAdmin
+      .from("cashflow_entries")
+      .select("amount")
+      .eq("workspace_id", workspaceId)
+      .eq("label", "__STARTING_CAPITAL__")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!fallback.error) {
+      return NextResponse.json({ startingCapital: Number(fallback.data?.amount ?? 0) });
+    }
+
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -42,7 +55,30 @@ export async function PATCH(request: NextRequest) {
   );
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const cleanup = await supabaseAdmin
+      .from("cashflow_entries")
+      .delete()
+      .eq("workspace_id", workspaceId)
+      .eq("label", "__STARTING_CAPITAL__");
+
+    if (cleanup.error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const insertFallback = await supabaseAdmin.from("cashflow_entries").insert({
+      user_id: actorUserId,
+      workspace_id: workspaceId,
+      entry_type: "inflow",
+      label: "__STARTING_CAPITAL__",
+      amount: payload.startingCapital,
+      entry_date: new Date().toISOString().slice(0, 10),
+    });
+
+    if (insertFallback.error) {
+      return NextResponse.json({ error: insertFallback.error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, mode: "fallback" });
   }
 
   return NextResponse.json({ success: true });

@@ -15,10 +15,14 @@ create table if not exists public.recurring_costs (
   label text not null,
   amount numeric(12,2) not null check (amount >= 0),
   cost_type text not null check (cost_type in ('fixed', 'variable')),
-  cadence text not null default 'monthly' check (cadence in ('monthly')),
+  cadence text not null default 'monthly' check (cadence in ('weekly', 'monthly', 'quarterly')),
+  next_charge_date date,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.recurring_costs
+  add column if not exists next_charge_date date;
 
 create index if not exists idx_recurring_costs_workspace_id on public.recurring_costs(workspace_id);
 

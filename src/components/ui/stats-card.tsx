@@ -28,7 +28,7 @@ const TrendIcon = ({ trend }: { trend: Trend }) => {
 
 export const StatsCard = ({ label, value, trend, trendValue }: StatsCardProps) => {
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.02)] backdrop-blur transition-transform duration-300 hover:-translate-y-0.5">
+    <article className="fin-card rounded-2xl p-4 transition-transform duration-300 hover:-translate-y-0.5">
       <p className="text-xs uppercase tracking-[0.15em] text-slate-400">{label}</p>
       <p className="mt-3 text-2xl font-semibold text-white">{value}</p>
       <p className={`mt-2 inline-flex items-center gap-1 text-sm ${trendClass[trend]}`}>

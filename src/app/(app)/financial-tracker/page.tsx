@@ -20,7 +20,8 @@ interface RecurringCost {
   label: string;
   amount: number;
   costType: "fixed" | "variable";
-  cadence: "monthly";
+  cadence: "weekly" | "monthly" | "quarterly";
+  nextChargeDate: string | null;
   userId?: string;
   updatedAt?: string;
 }
@@ -40,6 +41,8 @@ export default function FinancialTrackerPage() {
     label: "",
     amount: 0,
     costType: "fixed" as "fixed" | "variable",
+    cadence: "monthly" as "weekly" | "monthly" | "quarterly",
+    nextChargeDate: new Date().toISOString().slice(0, 10),
   });
 
   const fetchEntries = async (): Promise<CashflowEntry[]> => {
@@ -138,7 +141,13 @@ export default function FinancialTrackerPage() {
       body: JSON.stringify({ ...recurringForm, label: recurringForm.label.trim(), actorUserId }),
     });
 
-    setRecurringForm({ label: "", amount: 0, costType: "fixed" });
+    setRecurringForm({
+      label: "",
+      amount: 0,
+      costType: "fixed",
+      cadence: "monthly",
+      nextChargeDate: new Date().toISOString().slice(0, 10),
+    });
     await refreshAll();
   };
 
@@ -147,26 +156,38 @@ export default function FinancialTrackerPage() {
     await refreshAll();
   };
 
-  const inflow = entries
+  const operationalEntries = entries.filter((entry) => entry.label !== "__STARTING_CAPITAL__");
+
+  const inflow = operationalEntries
     .filter((entry) => entry.type === "inflow")
     .reduce((sum, entry) => sum + entry.amount, 0);
-  const outflow = entries
+  const outflow = operationalEntries
     .filter((entry) => entry.type === "outflow")
     .reduce((sum, entry) => sum + entry.amount, 0);
 
+  const monthlyEquivalent = (item: RecurringCost): number => {
+    if (item.cadence === "weekly") {
+      return (item.amount * 52) / 12;
+    }
+    if (item.cadence === "quarterly") {
+      return item.amount / 3;
+    }
+    return item.amount;
+  };
+
   const monthlyFixed = recurring
     .filter((item) => item.costType === "fixed")
-    .reduce((sum, item) => sum + item.amount, 0);
+    .reduce((sum, item) => sum + monthlyEquivalent(item), 0);
 
   const monthlyVariable = recurring
     .filter((item) => item.costType === "variable")
-    .reduce((sum, item) => sum + item.amount, 0);
+    .reduce((sum, item) => sum + monthlyEquivalent(item), 0);
 
   const monthlyEstimatedExpenses = monthlyFixed + monthlyVariable;
 
   const byMonth = useMemo(() => {
     const map = new Map<string, { inflow: number; outflow: number }>();
-    for (const entry of entries) {
+    for (const entry of operationalEntries) {
       const monthKey = entry.date.slice(0, 7);
       const current = map.get(monthKey) ?? { inflow: 0, outflow: 0 };
       if (entry.type === "inflow") {
@@ -177,7 +198,7 @@ export default function FinancialTrackerPage() {
       map.set(monthKey, current);
     }
     return map;
-  }, [entries]);
+  }, [operationalEntries]);
 
   const monthStats = Array.from(byMonth.values());
   const avgMonthlyRevenue = monthStats.length > 0 ? monthStats.reduce((sum, m) => sum + m.inflow, 0) / monthStats.length : 0;
@@ -331,6 +352,26 @@ export default function FinancialTrackerPage() {
               <option value="fixed">Fixe</option>
               <option value="variable">Variable</option>
             </select>
+            <select
+              value={recurringForm.cadence}
+              onChange={(event) =>
+                setRecurringForm((prev) => ({
+                  ...prev,
+                  cadence: event.target.value as "weekly" | "monthly" | "quarterly",
+                }))
+              }
+              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+            >
+              <option value="weekly">Chaque semaine</option>
+              <option value="monthly">Chaque mois</option>
+              <option value="quarterly">Chaque trimestre</option>
+            </select>
+            <input
+              type="date"
+              value={recurringForm.nextChargeDate}
+              onChange={(event) => setRecurringForm((prev) => ({ ...prev, nextChargeDate: event.target.value }))}
+              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
+            />
             <button className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-200 hover:bg-cyan-500/30">
               Ajouter recurrent
             </button>
@@ -342,8 +383,8 @@ export default function FinancialTrackerPage() {
         <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
           <h2 className="text-base font-medium text-white">Journal entrees / sorties</h2>
           <div className="mt-3 space-y-2">
-            {entries.length === 0 ? <p className="text-sm text-slate-400">Aucune transaction pour l&apos;instant.</p> : null}
-            {entries.map((entry) => (
+            {operationalEntries.length === 0 ? <p className="text-sm text-slate-400">Aucune transaction pour l&apos;instant.</p> : null}
+            {operationalEntries.map((entry) => (
               <div key={entry.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 text-sm">
                 <div>
                   <p className="text-slate-200">{entry.label}</p>
@@ -372,11 +413,11 @@ export default function FinancialTrackerPage() {
                 <div>
                   <p className="text-slate-200">{item.label}</p>
                   <p className="text-xs text-slate-500">
-                    {item.costType === "fixed" ? "Fixe" : "Variable"} - {item.cadence} - {getTeamMemberLabel(item.userId)}
+                    {item.costType === "fixed" ? "Fixe" : "Variable"} - {item.cadence} - Prochain: {item.nextChargeDate ?? "N/A"} - {getTeamMemberLabel(item.userId)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <p className="text-amber-300">{formatCurrency(item.amount)}</p>
+                  <p className="text-amber-300">{formatCurrency(monthlyEquivalent(item))}/mois</p>
                   <button type="button" onClick={() => void removeRecurring(item.id)} className="text-rose-300 hover:text-rose-200" aria-label="Delete recurring">
                     <Trash2 className="h-4 w-4" />
                   </button>

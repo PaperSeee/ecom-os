@@ -18,7 +18,7 @@ export const MobileNav = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 px-2 pb-safe pt-2 backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/90 px-2 pb-safe pt-2 backdrop-blur-xl lg:hidden">
       <ul className="grid grid-cols-6 gap-1">
         {items.map((item) => {
           const Icon = item.icon;
@@ -30,7 +30,7 @@ export const MobileNav = () => {
                 href={item.href}
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-md px-2 py-1.5 text-[10px]",
-                  active ? "text-cyan-300" : "text-slate-400",
+                  active ? "fin-chip text-emerald-100" : "text-slate-400",
                 )}
                 aria-label={item.label}
               >
