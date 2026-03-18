@@ -108,3 +108,15 @@ export interface TodoItem {
   updatedAt: string;
   userId?: string;
 }
+
+export interface SupplierAgent {
+  id: string;
+  name: string;
+  phone: string;
+  contactHandle: string;
+  rating: number;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  userId?: string;
+}

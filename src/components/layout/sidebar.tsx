@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
-import { Boxes, ChartNoAxesCombined, CheckSquare, ChevronsLeft, ChevronsRight, Flag, Gauge, Radar, TrendingUp, Wallet } from "lucide-react";
+import { Boxes, ChartNoAxesCombined, CheckSquare, ChevronsLeft, ChevronsRight, Flag, Gauge, PhoneCall, Radar, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,6 +14,7 @@ const navItems = [
   { href: "/ads-scaling", label: "Ads & Scaling", icon: ChartNoAxesCombined },
   { href: "/financial-tracker", label: "Financial Tracker", icon: Wallet },
   { href: "/cash-flow-predictor", label: "Cash-flow Predictor", icon: TrendingUp },
+  { href: "/agents", label: "Agents", icon: PhoneCall },
   { href: "/todo", label: "Team To-Do", icon: CheckSquare },
 ];
 
