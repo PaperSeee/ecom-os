@@ -57,7 +57,10 @@ const seedIfEmpty = async (workspaceId: string, userId: string) => {
 export async function GET() {
   const workspaceId = await resolveSharedWorkspaceId();
   if (!workspaceId) {
-    return NextResponse.json({ error: "Workspace not found" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Workspace introuvable. Verifie SUPABASE_SECRET_KEY puis execute team_onboarding.sql et workspace_audit_migration.sql." },
+      { status: 400 },
+    );
   }
 
   const userIds = await resolveSharedUserIds();
@@ -102,7 +105,10 @@ export async function POST(request: NextRequest) {
 
   const workspaceId = await resolveSharedWorkspaceId();
   if (!workspaceId) {
-    return NextResponse.json({ error: "Workspace not found" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Workspace introuvable. Verifie SUPABASE_SECRET_KEY puis execute team_onboarding.sql et workspace_audit_migration.sql." },
+      { status: 400 },
+    );
   }
 
   const userIds = await resolveSharedUserIds();

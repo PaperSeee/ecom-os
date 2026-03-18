@@ -28,13 +28,17 @@ export default function AgentsPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<SupplierAgent | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const loadAgents = async () => {
     const response = await fetch("/api/agents", { cache: "no-store" });
     if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      setErrorMessage(payload.error ?? "Impossible de charger les agents.");
       return;
     }
     const payload = (await response.json()) as { agents: SupplierAgent[] };
+    setErrorMessage("");
     setAgents(payload.agents);
   };
 
@@ -49,19 +53,26 @@ export default function AgentsPage() {
       return;
     }
 
-    await fetch("/api/agents", {
+    const response = await fetch("/api/agents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, name: form.name.trim(), actorUserId }),
     });
 
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      setErrorMessage(payload.error ?? "Impossible d'ajouter cet agent.");
+      return;
+    }
+
+    setErrorMessage("");
     setForm(emptyForm);
     await loadAgents();
   };
 
   const updateAgent = async (agent: SupplierAgent) => {
     setSavingId(agent.id);
-    await fetch("/api/agents", {
+    const response = await fetch("/api/agents", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -74,6 +85,15 @@ export default function AgentsPage() {
         notes: agent.notes,
       }),
     });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      setErrorMessage(payload.error ?? "Impossible de modifier cet agent.");
+      setSavingId(null);
+      return;
+    }
+
+    setErrorMessage("");
     setSavingId(null);
     await loadAgents();
   };
@@ -103,7 +123,14 @@ export default function AgentsPage() {
       setEditingId(null);
       setEditingDraft(null);
     }
-    await fetch(`/api/agents?id=${id}`, { method: "DELETE" });
+    const response = await fetch(`/api/agents?id=${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      setErrorMessage(payload.error ?? "Impossible de supprimer cet agent.");
+      return;
+    }
+
+    setErrorMessage("");
     await loadAgents();
   };
 
@@ -164,6 +191,9 @@ export default function AgentsPage() {
         </form>
 
         <section className="grid gap-3">
+          {errorMessage ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{errorMessage}</p>
+          ) : null}
           {agents.map((agent) => (
             <article key={agent.id} className="fin-panel p-4">
               {editingId === agent.id && editingDraft ? (
